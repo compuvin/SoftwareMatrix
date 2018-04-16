@@ -3,14 +3,14 @@ A series of scripts to document and report on software changes
 
 Requires MySQL 5.7
 Blank database is included. Plan is to create a script to create database and prompt for needed info.
-
+For now, each script has a group of required variables near the top of the file.
 
 Scripts and their usage:
 
 IngestCSV.vbs:
 This is the main script. Frequency should be daily.
-Pulls in a CSV file in the format (ADD FORMAT) from any software collection source (we use PDQ - www.pdq.com.)
-Checks any new software to see if it is FOSS using two websites (NEED WEBSITES)
+Pulls in a CSV file in the format (Workstation, Application, Publisher, Version) from any software collection source (we use PDQ - www.pdq.com.)
+Checks any new software to see if it is FOSS using two websites (www.fosshub.com and www.chocolatey.org)
 Imports collected data into database and then reports on changes.
 Changes are reported via two emails - the Security Report and the Change Report
 - Security Report only reports on changes that impact the organization as a whole (e.g. new software added or deleted that was never seen before.) Only gets generated changes dictate.
@@ -38,5 +38,7 @@ The hope is to replace this with a web GUI.
 
 
 To Do:
-Create web GUI (in PHP?) - allow for categorization of applications and quick reporting/searching<br>
-Enhance vulnerability table - Auto addition from CheckVulnerabilities.vbs, email with top 10 high risk software
+- Create web GUI (in PHP?) - allow for categorization of applications and quick reporting/searching
+- Enhance vulnerability table - Auto addition from CheckVulnerabilities.vbs, email with top 10 high risk software
+- Create and Integrate WhatTheFOSS list
+- Better code documentation
