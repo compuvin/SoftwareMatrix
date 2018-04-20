@@ -32,7 +32,7 @@ If filesys.FileExists(CSVPath) then
 	if len(AllApps) > 100 then
 		Set adoconn = CreateObject("ADODB.Connection")
 		Set rs = CreateObject("ADODB.Recordset")
-		adoconn.Open "Driver={MySQL ODBC 5.3 ANSI Driver};Server=localhost;" & _
+		adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=localhost;" & _
 					   "Database=software_matrix; User=root; Password=" & DBPass & ";"
 
 		Get_PC_New_Updated 'List software Added/Updated from each PC
