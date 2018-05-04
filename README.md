@@ -3,7 +3,6 @@ A series of scripts to document and report on software changes
 
 Requires MySQL 5.7
 Blank database is included. Plan is to create a script to create database and prompt for needed info.
-For now, each script has a group of required variables near the top of the file.
 
 Scripts and their usage:
 
