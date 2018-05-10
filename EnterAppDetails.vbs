@@ -5,9 +5,8 @@ Dim str
 dim WPData 'Web page text
 dim xmlhttp : set xmlhttp = createobject("msxml2.xmlhttp.3.0")
 set filesys=CreateObject("Scripting.FileSystemObject")
-Dim WshShell, strCurDir
-Set WshShell = CreateObject("WScript.Shell")
-strCurDir = WshShell.CurrentDirectory
+Dim strCurDir
+strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 
 'Gather variables from smapp.ini
 If filesys.FileExists(strCurDir & "\smapp.ini") then

@@ -11,9 +11,8 @@ Dim adoconn
 Dim rs
 Dim str
 set filesys=CreateObject("Scripting.FileSystemObject")
-Dim WshShell, strCurDir
-Set WshShell = CreateObject("WScript.Shell")
-strCurDir = WshShell.CurrentDirectory
+Dim strCurDir
+strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 
 'Gather variables from smapp.ini
 If filesys.FileExists(strCurDir & "\smapp.ini") then

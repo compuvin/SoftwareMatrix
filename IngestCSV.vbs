@@ -10,7 +10,7 @@ set filesys=CreateObject("Scripting.FileSystemObject")
 set xmlhttp = createobject("msxml2.xmlhttp.3.0")
 Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
-strCurDir = WshShell.CurrentDirectory
+strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 
 'Gather variables from smapp.ini or prompt for them and save them for next time
 If filesys.FileExists(strCurDir & "\smapp.ini") then
