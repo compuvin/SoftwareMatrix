@@ -129,10 +129,10 @@ Function CountHighRiskApps()
 	
 		i = i + 1
 		rs.movenext
+		if rs.eof or i > 10 then outputl = outputl & "</table>" & vbcrlf
 	loop
 	
 	rs.close
-	outputl = outputl & "</table>" & vbcrlf
 End Function
 
 Function SendMail(TextRcv,TextSubject)
