@@ -1,6 +1,7 @@
 Dim adoconn
 Dim rs
 Dim str
+Dim i 'Counter
 dim outputl 'Email body
 dim CountName 'Count for each app
 set filesys=CreateObject("Scripting.FileSystemObject")
@@ -36,6 +37,14 @@ CheckLicenses 'Check licensed apps vs. actual installed count
 if outputl <> "" then
 	outputl = "<html><head> <style>BODY{font-family: Arial; font-size: 10pt;}TABLE{border: 1px solid black; border-collapse: collapse;}TH{border: 1px solid black; background: #dddddd; padding: 5px; }TD{border: 1px solid black; padding: 5px; }</style> </head><body>" & vbcrlf & outputl
 	SendMail RptToEmail, "Software Matrix: Licensing Report"
+	outputl = ""
+end if
+
+CountHighRiskApps 'Report on top 10 high risk apps
+
+if outputl <> "" then
+	outputl = "<html><head> <style>BODY{font-family: Arial; font-size: 10pt;}TABLE{border: 1px solid black; border-collapse: collapse;}TH{border: 1px solid black; background: #dddddd; padding: 5px; }TD{border: 1px solid black; padding: 5px; }</style> </head><body>" & vbcrlf & outputl
+	SendMail RptToEmail, "Software Matrix: High Risk Software Report"
 	outputl = ""
 end if
 
@@ -89,6 +98,41 @@ Function CheckLicenses()
 	loop
 	
 	rs.close
+End Function
+
+Function CountHighRiskApps()
+	str = "select Name, count(Name), max(DateAdded), (select Computers from software_matrix.discoveredapplications where discoveredapplications.Name = highriskapps.Name) Computers from highriskapps where DateAdded > '" & format(date() - 365, "YYYY-MM-DD") & "' group by Name order by count(Name) DESC, max(DateAdded) DESC, Computers DESC;"
+	rs.Open str, adoconn, 2, 1 'OpenType, LockType
+	
+	if not rs.eof then
+		'Header Info
+		outputl = outputl & "<p><b>High Risk Application Report (top 10):</b></p>" & vbcrlf
+		outputl = outputl & "<table>" & vbcrlf
+		outputl = outputl & "<tr>" & vbcrlf
+		outputl = outputl & "  <th>Name</th>" & vbcrlf
+		outputl = outputl & "  <th>Vulnerabilities prior year</th>" & vbcrlf
+		outputl = outputl & "  <th>Date of Last Vulnerability</th>" & vbcrlf
+		outputl = outputl & "  <th>Installed Amount</th>" & vbcrlf
+		outputl = outputl & "</tr>" & vbcrlf
+		
+		rs.MoveFirst
+	end if
+
+	i = 1
+	do while not rs.eof and not i > 10
+		outputl = outputl & "<tr>" & vbcrlf
+		outputl = outputl & "  <td>" & rs("Name") & "</td>" & vbcrlf
+		outputl = outputl & "  <td>" & rs("count(Name)") & "</td>" & vbcrlf
+		outputl = outputl & "  <td>" & rs("max(DateAdded)") & "</td>" & vbcrlf
+		outputl = outputl & "  <td>" & rs("Computers") & "</td>" & vbcrlf
+		outputl = outputl & "</tr>" & vbcrlf
+	
+		i = i + 1
+		rs.movenext
+	loop
+	
+	rs.close
+	outputl = outputl & "</table>" & vbcrlf
 End Function
 
 Function SendMail(TextRcv,TextSubject)

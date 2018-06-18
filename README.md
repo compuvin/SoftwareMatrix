@@ -25,10 +25,11 @@ Checks nvd.nist.gov for vulnerabilities in installed applications. Frequency sho
 Uses RSS feed on NIST website to generate an email report on any applications thats name matches the feed. Not 100% accurate. Name must be exactly the same to match.
 Will report on a version match if there is one.
 
-CountApps-CheckLicense.vbs:
+CountApps-AssociatedReports.vbs
 Counts total installed instances per application. Frequency - monthly.
 Compares count to licenses table. Right now data needs to be entered to that table manually.
 Creates email report if any applications are over subscribed.
+Creates email report on top 10 highest risk software based on vulnerabilities within last year.
 
 EnterAppDetails.vbs:
 Run as needed.
@@ -38,6 +39,6 @@ The hope is to replace this with a web GUI.
 
 To Do:
 - Create web GUI (in PHP?) - allow for categorization of applications and quick reporting/searching
-- Enhance vulnerability table - Auto addition from CheckVulnerabilities.vbs, email with top 10 high risk software
+- DONE: Enhance vulnerability table - Auto addition from CheckVulnerabilities.vbs, email with top 10 high risk software
 - Create and Integrate WhatTheFOSS list
 - Better code documentation
