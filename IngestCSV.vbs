@@ -3,6 +3,7 @@ dim CVersion 'Installed version
 dim outputl 'Email body
 Dim AllApps 'Data from CSV
 dim WPData 'Web page text
+Dim yfound 'For new apps, series of tests to find similar apps
 Dim adoconn
 Dim rs
 Dim str
@@ -142,45 +143,104 @@ Function Get_PC_New_Updated()
 			'msgbox "Got it"
 			
 			rs.update
+			rs.close
 		else
-			CurrAppNoVer = replace(CurrApp, ".", "")
-			CurrAppNoVer = replace(CurrAppNoVer, "x86", "")
-			CurrAppNoVer = replace(CurrAppNoVer, "x64", "")
-			CurrAppNoVer = replace(CurrAppNoVer, "(", "")
-			CurrAppNoVer = replace(CurrAppNoVer, ")", "")
+			rs.close
+			yfound = False
+			
+			'Check existing software for similar apps
+			CurrAppNoVer = replace(CurrApp, ".", "_")
 			for i=0 to 9
-				CurrAppNoVer = replace(CurrAppNoVer, i, "")
+				CurrAppNoVer = replace(CurrAppNoVer, i, "_")
 			next
-			CurrAppNoVer = trim(CurrAppNoVer)
-			TestFOSSfree = ""
-			TestFOSSOS = ""
-			TestFOSS = ""
+			i = 0
+			do while right(CurrAppNoVer,1) = "_"
+				CurrAppNoVer = left(CurrAppNoVer, len(CurrAppNoVer) - 1)
+				i = 1
+			loop
+			if i = 1 then CurrAppNoVer = CurrAppNoVer & "%"
+			str = "Select * from discoveredapplications where Name like '" & CurrAppNoVer & "';"
+			rs.Open str, adoconn, 2, 1 'OpenType, LockType
 			
-			'Test FOSS at FOSShub.com
-			xmlhttp.open "get", "https://www.fosshub.com/search/" & CurrAppNoVer, false
-			xmlhttp.send
-			WPData = xmlhttp.responseText
-			if instr(1,WPData,"There is <span>0</span> app",1) = 0 then
-				TestFOSSFree = "Y"
-				TestFOSSOS = "Y"
+			if not rs.eof then
+				yfound = True
+				'msgbox "New app - minor version change (1)" & vbCrlf & CurrApp
+				
+				rs.MoveFirst
+				if len(rs("UpdateURL")) > 1 then
+					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & int(rs("UpdatePageQTH")) & "','" & int(rs("UpdatePageQTHVarience")) & "');"
+				else
+					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "');"
+				end if
+				adoconn.Execute(str)
+			end if
+			rs.close
+			
+			if yfound = false then
+				str = "Select * from discoveredapplications where Name like '" & left(CurrApp,len(CurrApp)/2) & "%' and not UpdateURL = '' and UpdateURL IS NOT NULL;"
+				rs.Open str, adoconn, 2, 1 'OpenType, LockType
+				
+				if not rs.eof then
+					rs.MoveFirst
+					
+					'Pull website
+					On error resume next
+					xmlhttp.open "get", rs("UpdateURL"), false
+					xmlhttp.send
+					WPData = xmlhttp.responseText
+					
+					'Check to see if exists
+					if instr(1,WPData,CurrVer,0)>0 then
+						yfound = True
+						'msgbox "New app - major version change (2)" & vbCrlf & CurrApp
+						
+						str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & instr(1,WPData,CurrVer,0) & "','" & int(rs("UpdatePageQTHVarience")) & "');"
+						adoconn.Execute(str)
+					end if
+				end if
+				rs.close
 			end if
 			
-			'Test FOSS at chocolatey.org
-			xmlhttp.open "get", "https://chocolatey.org/packages?q=" & CurrAppNoVer, false
-			xmlhttp.send
-			WPData = xmlhttp.responseText
-			if instr(1,WPData,"returned 0 packages",1) = 0 then
-				TestFOSSFree = "Y"
+			if yfound = false then
+				'msgbox "New app - brand new (3)" & vbCrlf & CurrApp
+				CurrAppNoVer = replace(CurrApp, ".", "")
+				CurrAppNoVer = replace(CurrAppNoVer, "x86", "")
+				CurrAppNoVer = replace(CurrAppNoVer, "x64", "")
+				CurrAppNoVer = replace(CurrAppNoVer, "(", "")
+				CurrAppNoVer = replace(CurrAppNoVer, ")", "")
+				for i=0 to 9
+					CurrAppNoVer = replace(CurrAppNoVer, i, "")
+				next
+				CurrAppNoVer = trim(CurrAppNoVer)
+				TestFOSSfree = ""
+				TestFOSSOS = ""
+				TestFOSS = ""
+				
+				'Test FOSS at FOSShub.com
+				xmlhttp.open "get", "https://www.fosshub.com/search/" & CurrAppNoVer, false
+				xmlhttp.send
+				WPData = xmlhttp.responseText
+				if instr(1,WPData,"There is <span>0</span> app",1) = 0 then
+					TestFOSSFree = "Y"
+					TestFOSSOS = "Y"
+				end if
+				
+				'Test FOSS at chocolatey.org
+				xmlhttp.open "get", "https://chocolatey.org/packages?q=" & CurrAppNoVer, false
+				xmlhttp.send
+				WPData = xmlhttp.responseText
+				if instr(1,WPData,"returned 0 packages",1) = 0 then
+					TestFOSSFree = "Y"
+				end if
+				
+				if TestFOSSFree = "Y" or TestFOSSOS = "Y" then TestFOSS = "Y"
+		  
+				str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & TestFOSSFree & "','" & TestFOSSOS & "','" & TestFOSS & "');"
+				adoconn.Execute(str)
+				
+				'msgbox "Added: " & CurrApp & " - " & CurrVer
 			end if
-			
-			if TestFOSSFree = "Y" or TestFOSSOS = "Y" then TestFOSS = "Y"
-	  
-			str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & TestFOSSFree & "','" & TestFOSSOS & "','" & TestFOSS & "');"
-			adoconn.Execute(str)
-			
-			'msgbox "Added: " & CurrApp & " - " & CurrVer
 		end if
-		rs.close
 		
 	loop
 	
