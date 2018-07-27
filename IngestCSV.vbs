@@ -4,6 +4,7 @@ dim outputl 'Email body
 Dim AllApps 'Data from CSV
 dim WPData 'Web page text
 Dim yfound 'For new apps, series of tests to find similar apps
+Dim UpdatePageQTH, UpdatePageQTHVarience 'Used to fix any integer values in the two fields that are actually NULL
 Dim adoconn
 Dim rs
 Dim str
@@ -168,7 +169,9 @@ Function Get_PC_New_Updated()
 				
 				rs.MoveFirst
 				if len(rs("UpdateURL")) > 1 then
-					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & int(rs("UpdatePageQTH")) & "','" & int(rs("UpdatePageQTHVarience")) & "');"
+					if int(rs("UpdatePageQTH")) & 0 = 0 then UpdatePageQTH = 0 else UpdatePageQTH = int(rs("UpdatePageQTH")) 'Fix NULL entries in integer field
+					if int(rs("UpdatePageQTHVarience")) & 0 = 0 then UpdatePageQTHVarience = 0 else UpdatePageQTHVarience = int(rs("UpdatePageQTHVarience")) 'Fix NULL entries in integer field
+					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & UpdatePageQTH & "','" & UpdatePageQTHVarience & "');"
 				else
 					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "');"
 				end if
