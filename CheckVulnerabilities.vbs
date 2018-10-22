@@ -19,6 +19,9 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
 	'Additional email settings found in Function SendMail()
+	
+	'AppSpecific
+	IgnoreVulnerabilities = "," & ReadIni(strCurDir & "\smapp.ini", "AppSpecific", "IgnoreVulnerabilities" ) & ","
 else
 	msgbox "INI file not found at: " & strCurDir & "\smapp.ini" & vbCrlf & "Please run IngestCSV.vbs first before running this file."
 end if
@@ -43,7 +46,7 @@ if len(WPData) > 100 then
 	rs.movefirst
 	
 	Do while not rs.eof
-		if instr(1,WPData,rs("Name"),1) > 0 then
+		if instr(1,WPData,rs("Name"),1) > 0 and instr(1,IgnoreVulnerabilities,"," & rs("Name") & ",",1) = 0 then
 		
 			if 	outputl = "No installed applications matched vulnerabilities added within the last week." then
 				'Header Info
