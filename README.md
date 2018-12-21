@@ -38,6 +38,6 @@ The hope is to replace this with a web GUI.
 
 
 To Do:
-- Create web GUI (in PHP?) - allow for categorization of applications and quick reporting/searching
+- Create web GUI - Project started - https://github.com/compuvin/SoftwareMatrix-GUI
 - Create and Integrate WhatTheFOSS list
 - Better code documentation
