@@ -46,7 +46,6 @@ if len(CurrID) > 0 and isnumeric(CurrID) then
 		msgbox "You are updating: " & CurrApp
 		CurrFree = inputbox("Is " & CurrApp & " free? (Y/N)", "Software Matrix", CurrFree)
 		CurrOS = inputbox("Is " & CurrApp & " Open Source? (Y/N)", "Software Matrix", CurrOS)
-		if CurrFree = "Y" or CurrOS = "Y" then msgbox "You are adding FOSS!!!" & vbCrlf & "(Good for you)"
 		CurrReason = inputbox("What is the reason for adding " & CurrApp & " to the network?", "Software Matrix", CurrReason)
 		CurrPC = inputbox("Generally speaking, which machines will " & CurrApp & " be used on?", "Software Matrix", CurrPC)
 		CurrPlans = inputbox("Generally speaking, what are the plans to remove " & CurrApp & "?", "Software Matrix", CurrPlans)
