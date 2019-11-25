@@ -112,9 +112,11 @@ Function Get_PC_New_Updated()
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-3)
 		elseif instr(1,AllApps_org,vbCrlf,1) - 1 =< 0 then
 			CurrVer = "0"
+			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
 			'msgbox CurrApp & " No version!"
 		else
 			CurrVer = mid(AllApps_org,1,instr(1,AllApps_org,vbCrlf,1)-1)
+			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
 		end if
 		'msgbox CurrVer
 		
