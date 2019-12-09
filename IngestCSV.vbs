@@ -365,7 +365,7 @@ Function Get_PC_New_Updated()
 End function
 
 Function Get_PC_Removed()
-	str = "Select * from applicationsdump where not LastDiscovered = '' and LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by Computer;"
+	str = "Select * from applicationsdump where LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by Computer;"
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 	if not rs.eof then
 		'Header Info
@@ -434,7 +434,7 @@ Function Get_Organization_New()
 End function
 
 Function Get_Organization_Removed()
-	str = "Select * from discoveredapplications where not LastDiscovered = '' and LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by Name;"
+	str = "Select * from discoveredapplications where LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by Name;"
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 	if not rs.eof then
 		'Header Info
