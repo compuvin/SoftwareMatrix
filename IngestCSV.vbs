@@ -221,11 +221,11 @@ Function Get_PC_New_Updated()
 				TestFOSSOS = ""
 				TestFOSS = ""
 				
-				'Test FOSS at FOSShub.com
-				xmlhttp.open "get", "https://www.fosshub.com/search/" & CurrAppNoVer, false
+				'Test FOSS at OpenHub.com
+				xmlhttp.open "get", "https://www.openhub.net/p?query=" & CurrAppNoVer, false
 				xmlhttp.send
 				WPData = xmlhttp.responseText
-				if instr(1,WPData,"There is <span>0</span> app",1) = 0 then
+				if instr(1,WPData," - did not match anything.",1) = 0 then
 					TestFOSSFree = "Y"
 					TestFOSSOS = "Y"
 				end if
