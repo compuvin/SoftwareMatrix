@@ -9,7 +9,7 @@ Scripts and their usage:
 IngestCSV.vbs:
 This is the main script. Frequency should be daily.
 Pulls in a CSV file in the format (Workstation, Application, Publisher, Version) from any software collection source (we use PDQ - www.pdq.com.)
-Checks any new software to see if it is FOSS using two websites (www.openhub.com and www.chocolatey.org)
+Checks any new software to see if it is FOSS using two websites (www.openhub.net and www.chocolatey.org)
 Imports collected data into database and then reports on changes.
 Changes are reported via two emails - the Security Report and the Change Report
 - Security Report only reports on changes that impact the organization as a whole (e.g. new software added or deleted that was never seen before.) Only gets generated when changes dictate.

@@ -221,7 +221,7 @@ Function Get_PC_New_Updated()
 				TestFOSSOS = ""
 				TestFOSS = ""
 				
-				'Test FOSS at OpenHub.com
+				'Test FOSS at OpenHub.net
 				xmlhttp.open "get", "https://www.openhub.net/p?query=" & CurrAppNoVer, false
 				xmlhttp.send
 				WPData = xmlhttp.responseText
