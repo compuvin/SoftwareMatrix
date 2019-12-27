@@ -48,11 +48,12 @@ if outputl <> "" then
 	outputl = ""
 end if
 
+
 Set adoconn = Nothing
 Set rs = Nothing
 
 Function CountApps()
-	str = "Select * from discoveredapplications where not LastDiscovered = '' and LastDiscovered IS NOT NULL and LastDiscovered > '" & format(date() - 7, "YYYY-MM-DD") & "' order by Name;"
+	str = "Select * from discoveredapplications where LastDiscovered IS NOT NULL and LastDiscovered > '" & format(date() - 7, "YYYY-MM-DD") & "' order by Name;"
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 
 	do while not rs.eof
@@ -60,6 +61,12 @@ Function CountApps()
 		CountName = adoconn.Execute(str) 'Kind of a hack way of doing this, results in an array with 0 being the count
 		rs("Computers") = CountName(0)
 		'msgbox rs("Name") & vbCrlf & CountName(0)
+		
+		'Fix discovered apps that have no instances of the Version_Newest
+		str = "select count(*) from applicationsdump where Name = '" & rs("Name") & "' and Version = '" & rs("Version_Newest") & "';"
+		CountName = adoconn.Execute(str) 'Kind of a hack way of doing this, results in an array with 0 being the count
+		if CountName(0) = "0" then rs("Version_Newest") = rs("Version_Oldest")
+		'if CountName(0) = "0" then msgbox rs("Name")
 		
 		rs.update
 		rs.movenext
@@ -195,6 +202,7 @@ Function Format(vExpression, sFormat)
 	  else
 	    nExpression = replace(nExpression,"HH",right("00" & hour(vExpression),2)) '2 character hour
 	    nExpression = replace(nExpression,"H",hour(vExpression)) '1 character hour
+		if int(hour(vExpression)) = 12 then nExpression = replace(nExpression,"AM/PM","PM") '12 noon is PM while anything else in this section is AM (fixed 04/19/2019 thanks to our HR Dept.)
 		nExpression = replace(nExpression,"AM/PM","AM") 'If its not PM, its AM
 	  end if
 	  nExpression = replace(nExpression,":MM",":" & right("00" & minute(vExpression),2)) '2 character minute
