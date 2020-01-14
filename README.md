@@ -2,7 +2,7 @@
 A series of scripts to document and report on software changes
 
 Requires MySQL 8.0
-Blank database is included. Plan is to create a script to create database and prompt for needed info.
+Script will prompt for server information and create the necessary tables.
 
 Scripts and their usage:
 

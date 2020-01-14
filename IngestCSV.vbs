@@ -13,11 +13,17 @@ set xmlhttp = createobject("msxml2.xmlhttp.3.0")
 Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
+Dim Response 'For answers to prompts
+Dim PSSchema, PSTbl 'Define schema and table names
+PSSchema = "software_matrix"
+PSTbl = "discoveredapplications"
 
 'Gather variables from smapp.ini or prompt for them and save them for next time
 If filesys.FileExists(strCurDir & "\smapp.ini") then
 	'Database
 	CSVPath = ReadIni(strCurDir & "\smapp.ini", "Database", "CSVPath" )
+	DBLocation = ReadIni(strCurDir & "\smapp.ini", "Database", "DBLocation" )
+	DBUser = ReadIni(strCurDir & "\smapp.ini", "Database", "DBUser" )
 	DBPass = ReadIni(strCurDir & "\smapp.ini", "Database", "DBPass" )
 	
 	'Email - Defaults to anonymous login
@@ -25,11 +31,20 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
 	'Additional email settings found in Function SendMail()
+	
+	'WebGUI
+	BaseURL = ReadIni(strCurDir & "\smapp.ini", "WebGUI", "BaseURL" )
 else
 	msgbox "INI file not found at: " & strCurDir & "\smapp.ini" & vbCrlf & "You will now be prompted with questions to create it."
 	
+	'Database
 	CSVPath = inputbox("Enter the location where the CSV file with the software dump can be found (UNC path recommended):", "Software Matrix", strCurDir & "\Applications.csv")
-	DBPass = inputbox("Enter the password to access database on localhost:", "Software Matrix", "P@ssword1")
+	DBLocation = inputbox("Enter the IP address or hostname for the location of the database:", "Software Matrix", "localhost")
+	DBUser = inputbox("Enter the user name to access database on " & DBLocation & ":", "Software Matrix", "user")
+	DBPass = inputbox("Enter the password to access database on " & DBLocation & ":", "Software Matrix", "P@ssword1")
+	
+	'Check to see if DB exists
+	CheckForTables
 	
 	'Email - Defaults to anonymous login
 	RptToEmail = inputbox("Enter the report email's To address:", "Software Matrix", "admin@company.com")
@@ -37,12 +52,18 @@ else
 	EmailSvr = inputbox("Enter the FQDN or IP address of email server:", "Software Matrix", "mail.server.com")
 	msgbox "Additional email settings found in Function SendMail()"
 	
+	'WebGUI
+	BaseURL = inputbox("Enter the base URL for the Software Matrix GUI (Web GUI available at https://github.com/compuvin/SoftwareMatrix-GUI):", "Software Matrix", "http://www.intranet.com")
+		
 	'Write the data to INI file
 	WriteIni strCurDir & "\smapp.ini", "Database", "CSVPath", CSVPath
+	WriteIni strCurDir & "\smapp.ini", "Database", "DBLocation", DBLocation
+	WriteIni strCurDir & "\smapp.ini", "Database", "DBUser", DBUser
 	WriteIni strCurDir & "\smapp.ini", "Database", "DBPass", DBPass
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptToEmail", RptToEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptFromEmail", RptFromEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "EmailSvr", EmailSvr
+	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", EditURL
 end if
 			   
 outputl = ""
@@ -53,8 +74,8 @@ If filesys.FileExists(CSVPath) then
 	if len(AllApps) > 100 then
 		Set adoconn = CreateObject("ADODB.Connection")
 		Set rs = CreateObject("ADODB.Recordset")
-		adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=localhost;" & _
-					   "Database=software_matrix; User=root; Password=" & DBPass & ";"
+		adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+					   "Database=" & PSSchema & "; User=" & DBUser & "; Password=" & DBPass & ";"
 
 		Get_PC_New_Updated 'List software Added/Updated from each PC
 		Get_PC_Removed 'List software removed from each PC
@@ -234,7 +255,7 @@ Function Get_PC_New_Updated()
 				xmlhttp.open "get", "https://chocolatey.org/packages?q=" & CurrAppNoVer, false
 				xmlhttp.send
 				WPData = xmlhttp.responseText
-				if instr(1,WPData,"returned 0 packages",1) = 0 then
+				if instr(1,WPData,"Returned 0 <text>Package</text>s",1) = 0 then
 					TestFOSSFree = "Y"
 				end if
 				
@@ -423,7 +444,11 @@ Function Get_Organization_New()
 			outputl = outputl & "  <td>" & rs("FOSS") & "</td>" & vbcrlf
 		end if
 		outputl = outputl & "  <td>" & rs("ReasonForSoftware") & "</td>" & vbcrlf
-		outputl = outputl & "  <td>" & rs("ID") & "</td>" & vbcrlf
+		if BaseURL = "" then
+			outputl = outputl & "  <td>" & rs("ID") & "</td>" & vbcrlf
+		else
+			outputl = outputl & "  <td><a href=""" & BaseURL & "/edit-appinfo.php?id=" & rs("ID") & """>" & rs("ID") & "</a></td>" & vbcrlf
+		end if
 		outputl = outputl & "</tr>" & vbcrlf
 	
 		rs.movenext
@@ -784,3 +809,75 @@ Sub WriteIni( myFilePath, mySection, myKey, myValue ) 'Thanks to http://www.robv
     Set objNewIni = Nothing
     Set objFSO    = Nothing
 End Sub
+
+'Check to see if database and tables exist
+Function CheckForTables()
+	Dim CreatePS2DB 'Boolean for DB creation
+	CreatePS2DB = False
+	
+	Set adoconn = CreateObject("ADODB.Connection")
+	Set rs = CreateObject("ADODB.Recordset")
+	adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+			"User=" & DBUser & "; Password=" & DBPass & ";"
+			
+	str = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '" & PSSchema & "'"
+	rs.CursorLocation = 3 'adUseClient
+	rs.Open str, adoconn, 2, 1 'OpenType, LockType
+	
+	if rs.eof then
+		Response = msgbox("The database does not exist. Would you like to create it now? (Make sure the user """ & DBUser & """ has permission to do so)", vbYesNo)
+		if Response = vbYes then
+			CreatePS2DB = True
+		else
+			WScript.Quit
+		end if
+		rs.close
+	else
+		'msgbox "DB exists"
+		rs.close
+		
+		'Double check to make sure table is also there
+		str = "SELECT * FROM information_schema.tables WHERE table_schema = '" & PSSchema & "' AND table_name = '" & PSTbl & "' LIMIT 1;"
+		rs.Open str, adoconn, 2, 1 'OpenType, LockType
+	
+		if rs.eof then
+			Response = msgbox("The database exists but the table does not exist. Would you like to create it now?", vbYesNo)
+			if Response = vbYes then
+				CreatePS2DB = True
+			else
+				WScript.Quit
+			end if
+			rs.close
+		else
+			'msgbox "Table exists"
+			rs.close
+		end if
+	end if
+	
+	'Create schema and/or table if needed
+	if CreatePS2DB = True then
+		'Create schema if not there
+		str = "CREATE DATABASE IF NOT EXISTS " & PSSchema & ";"
+		adoconn.Execute(str)
+		
+		'Create tables
+		PSTbl = "discoveredapplications"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Name text, `Version_Oldest` text, `Version_Newest` text, Computers int(11) DEFAULT NULL, Free text, OpenSource text, FOSS text, ReasonForSoftware text, NeededOnMachines text, PlansForRemoval text, `Update Method` text, FirstDiscovered date DEFAULT NULL, LastDiscovered date DEFAULT NULL, UpdateURL text, UpdatePageQTH int(11) DEFAULT NULL, UpdatePageQTHVarience int(11) DEFAULT '10');"
+		adoconn.Execute(str)
+		
+		PSTbl = "applicationsdump"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Computer text, Name text, Publisher text, Version text, FirstDiscovered date DEFAULT NULL, LastDiscovered date DEFAULT NULL);"
+		adoconn.Execute(str)
+		
+		PSTbl = "highriskapps"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Name text, DateAdded date DEFAULT NULL, Source text);"
+		adoconn.Execute(str)
+		
+		PSTbl = "licensedapps"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Name text, Publisher text, Amount int(11) DEFAULT NULL, Comments text);"
+		adoconn.Execute(str)
+	end if
+	
+	Set adoconn = Nothing
+	Set rs = Nothing
+End Function
