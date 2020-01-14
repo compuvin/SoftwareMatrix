@@ -31,6 +31,9 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
 	'Additional email settings found in Function SendMail()
+	
+	'WebGUI
+	BaseURL = ReadIni(strCurDir & "\smapp.ini", "WebGUI", "BaseURL" )
 else
 	msgbox "INI file not found at: " & strCurDir & "\smapp.ini" & vbCrlf & "You will now be prompted with questions to create it."
 	
@@ -49,6 +52,9 @@ else
 	EmailSvr = inputbox("Enter the FQDN or IP address of email server:", "Software Matrix", "mail.server.com")
 	msgbox "Additional email settings found in Function SendMail()"
 	
+	'WebGUI
+	BaseURL = inputbox("Enter the base URL for the Software Matrix GUI (Web GUI available at https://github.com/compuvin/SoftwareMatrix-GUI):", "Software Matrix", "http://www.intranet.com")
+		
 	'Write the data to INI file
 	WriteIni strCurDir & "\smapp.ini", "Database", "CSVPath", CSVPath
 	WriteIni strCurDir & "\smapp.ini", "Database", "DBLocation", DBLocation
@@ -57,6 +63,7 @@ else
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptToEmail", RptToEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptFromEmail", RptFromEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "EmailSvr", EmailSvr
+	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", EditURL
 end if
 			   
 outputl = ""
@@ -437,7 +444,11 @@ Function Get_Organization_New()
 			outputl = outputl & "  <td>" & rs("FOSS") & "</td>" & vbcrlf
 		end if
 		outputl = outputl & "  <td>" & rs("ReasonForSoftware") & "</td>" & vbcrlf
-		outputl = outputl & "  <td>" & rs("ID") & "</td>" & vbcrlf
+		if BaseURL = "" then
+			outputl = outputl & "  <td>" & rs("ID") & "</td>" & vbcrlf
+		else
+			outputl = outputl & "  <td><a href=""" & BaseURL & "/edit-appinfo.php?id=" & rs("ID") & """>" & rs("ID") & "</a></td>" & vbcrlf
+		end if
 		outputl = outputl & "</tr>" & vbcrlf
 	
 		rs.movenext
