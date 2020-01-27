@@ -11,6 +11,8 @@ strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 'Gather variables from smapp.ini
 If filesys.FileExists(strCurDir & "\smapp.ini") then
 	'Database
+	DBLocation = ReadIni(strCurDir & "\smapp.ini", "Database", "DBLocation" )
+	DBUser = ReadIni(strCurDir & "\smapp.ini", "Database", "DBUser" )
 	DBPass = ReadIni(strCurDir & "\smapp.ini", "Database", "DBPass" )
 else
 	msgbox "INI file not found at: " & strCurDir & "\smapp.ini" & vbCrlf & "Please run IngestCSV.vbs first before running this file."
@@ -22,8 +24,8 @@ CurrID = inputbox("Enter the reference ID of the application that you would like
 if len(CurrID) > 0 and isnumeric(CurrID) then
 	Set adoconn = CreateObject("ADODB.Connection")
 	Set rs = CreateObject("ADODB.Recordset")
-	adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=localhost;" & _
-                   "Database=software_matrix; User=root; Password=" & DBPass & ";"
+	adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+					   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 	
 	str = "Select * from discoveredapplications where ID = '" & CurrID & "';"
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
@@ -45,17 +47,24 @@ if len(CurrID) > 0 and isnumeric(CurrID) then
 		'Prompt for data
 		msgbox "You are updating: " & CurrApp
 		CurrFree = inputbox("Is " & CurrApp & " free? (Y/N)", "Software Matrix", CurrFree)
+		if CurrFree = vbFalse then WScript.Quit 'User cancelled
 		CurrOS = inputbox("Is " & CurrApp & " Open Source? (Y/N)", "Software Matrix", CurrOS)
+		if CurrOS = vbFalse then WScript.Quit 'User cancelled
 		CurrReason = inputbox("What is the reason for adding " & CurrApp & " to the network?", "Software Matrix", CurrReason)
+		if CurrReason = vbFalse then WScript.Quit 'User cancelled
 		CurrPC = inputbox("Generally speaking, which machines will " & CurrApp & " be used on?", "Software Matrix", CurrPC)
+		if CurrPC = vbFalse then WScript.Quit 'User cancelled
 		CurrPlans = inputbox("Generally speaking, what are the plans to remove " & CurrApp & "?", "Software Matrix", CurrPlans)
+		if CurrPlans = vbFalse then WScript.Quit 'User cancelled
 		CurrUpdate = inputbox("How is " & CurrApp & " updated? (Manual/Automatic/None)", "Software Matrix", CurrUpdate)
+		if CurrUpdate = vbFalse then WScript.Quit 'User cancelled
 		if CurrUpdate = "None" then
 			CurrURL = ""
 			CurrQTH = 0
 			CurrVar = 10
 		else
 			CurrURL = inputbox("Enter the URL where the version number (" & CurrVer & ") can be found:", "Software Matrix", CurrURL)
+			if CurrURL = vbFalse then WScript.Quit 'User cancelled
 			if len(CurrURL) = 0 then
 				CurrQTH = 0
 				CurrVar = 10
@@ -71,7 +80,9 @@ if len(CurrID) > 0 and isnumeric(CurrID) then
 				else
 					CurrQTH = inputbox("The version (" & CurrVer & ") was not found on the URL that was entered. You should leave this blank and verify that the URL is correct:", "Software Matrix", CurrQTH)
 				end if
+				if CurrQTH = vbFalse then WScript.Quit 'User cancelled
 				if not CurrQTH = "" and not CurrQTH = "0" then CurrVar = inputbox("Leave this at 10 unless you know what you are doing:", "Software Matrix", CurrVar) else CurrVar = 10
+				if CurrVar = vbFalse then WScript.Quit 'User cancelled
 			end if
 		end if
 		msgbox CurrApp & " will now be updated"

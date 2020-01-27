@@ -20,6 +20,8 @@ strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 'Gather variables from smapp.ini
 If filesys.FileExists(strCurDir & "\smapp.ini") then
 	'Database
+	DBLocation = ReadIni(strCurDir & "\smapp.ini", "Database", "DBLocation" )
+	DBUser = ReadIni(strCurDir & "\smapp.ini", "Database", "DBUser" )
 	DBPass = ReadIni(strCurDir & "\smapp.ini", "Database", "DBPass" )
 	
 	'Email - Defaults to anonymous login
@@ -38,8 +40,8 @@ j = 0
 
 Set adoconn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
-adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=localhost;" & _
-                   "Database=software_matrix; User=root; Password=" & DBPass & ";"
+adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+			   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 				   
 str = "Select * from discoveredapplications where (not UpdateURL = '' and UpdateURL IS NOT NULL) or Version_Oldest <> Version_Newest order by Name;"
 rs.Open str, adoconn, 3, 3 'OpenType, LockType

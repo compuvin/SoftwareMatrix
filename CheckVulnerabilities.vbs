@@ -12,6 +12,8 @@ strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 'Gather variables from smapp.ini
 If filesys.FileExists(strCurDir & "\smapp.ini") then
 	'Database
+	DBLocation = ReadIni(strCurDir & "\smapp.ini", "Database", "DBLocation" )
+	DBUser = ReadIni(strCurDir & "\smapp.ini", "Database", "DBUser" )
 	DBPass = ReadIni(strCurDir & "\smapp.ini", "Database", "DBPass" )
 	
 	'Email - Defaults to anonymous login
@@ -38,8 +40,8 @@ outputl = "No installed applications matched vulnerabilities added within the la
 if len(WPData) > 100 then
 	Set adoconn = CreateObject("ADODB.Connection")
 	Set rs = CreateObject("ADODB.Recordset")
-	adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=localhost;" & _
-                   "Database=software_matrix; User=root; Password=" & DBPass & ";"
+	adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+				   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 	
 	str = "Select * from discoveredapplications;"
 	rs.Open str, adoconn, 2, 1 'OpenType, LockType
