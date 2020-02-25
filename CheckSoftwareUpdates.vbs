@@ -29,6 +29,9 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
 	'Additional email settings found in Function SendMail()
+	
+	'WebGUI
+	BaseURL = ReadIni(strCurDir & "\smapp.ini", "WebGUI", "BaseURL" )
 else
 	msgbox "INI file not found at: " & strCurDir & "\smapp.ini" & vbCrlf & "Please run IngestCSV.vbs first before running this file."
 end if
@@ -74,10 +77,18 @@ do while not rs.eof
 			outputl = outputl & "  <td>" & CVersion & "</td>" & vbcrlf
 			WPVerGuess = NewVersionGuess(WPData, CVersion)		
 			if WPVerGuess => WPQTH + WPVar or WPVerGuess =< WPQTH - WPVar then
-				if instr(1,WPData,CVersion,0) => WPQTH + WPVar then
-					outputl = outputl & "  <td bgcolor=yellow>Possible Update (" & instr(1,WPData,CVersion,0) - WPQTH & ")</td>" & vbcrlf
-				elseif instr(1,WPData,CVersion,0) =< WPQTH - WPVar then
-					outputl = outputl & "  <td bgcolor=yellow>Possible Update (" & WPQTH - instr(1,WPData,CVersion,0) & ")</td>" & vbcrlf
+				if BaseURL = "" then 'No web GUI installed
+					if instr(1,WPData,CVersion,0) => WPQTH + WPVar then
+						outputl = outputl & "  <td bgcolor=yellow>Possible Update (" & instr(1,WPData,CVersion,0) - WPQTH & ")</td>" & vbcrlf
+					elseif instr(1,WPData,CVersion,0) =< WPQTH - WPVar then
+						outputl = outputl & "  <td bgcolor=yellow>Possible Update (" & WPQTH - instr(1,WPData,CVersion,0) & ")</td>" & vbcrlf
+					end if
+				else 'Web GUI, add links to fix descrepencies
+					if instr(1,WPData,CVersion,0) => WPQTH + WPVar then
+						outputl = outputl & "  <td bgcolor=yellow><a style=""color:black"" href=""" & BaseURL & "/possibleupdate.php?id=" & rs("ID") & "&qth=" & instr(1,WPData,CVersion,0) & """>Possible Update (" & instr(1,WPData,CVersion,0) - WPQTH & ")</a></td>" & vbcrlf
+					elseif instr(1,WPData,CVersion,0) =< WPQTH - WPVar then
+						outputl = outputl & "  <td bgcolor=yellow><a style=""color:black"" href=""" & BaseURL & "/possibleupdate.php?id=" & rs("ID") & "&qth=" & instr(1,WPData,CVersion,0) & """>Possible Update (" & WPQTH - instr(1,WPData,CVersion,0) & ")</a></td>" & vbcrlf
+					end if
 				end if
 			else
 				outputl = outputl & "  <td bgcolor=red>New Version " & mid(WPData,WPVerGuess+1,len(CVersion)) & "</td>" & vbcrlf
