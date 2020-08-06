@@ -20,6 +20,9 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
 	'Additional email settings found in Function SendMail()
+	
+	'WebGUI
+	BaseURL = ReadIni(strCurDir & "\smapp.ini", "WebGUI", "BaseURL" )
 else
 	msgbox "INI file not found at: " & strCurDir & "\smapp.ini" & vbCrlf & "Please run IngestCSV.vbs first before running this file."
 end if
@@ -78,7 +81,7 @@ Function CountApps()
 End Function
 
 Function CheckLicenses()
-	str = "SELECT L.Name, L.Publisher, L.Amount, D.Computers FROM software_matrix.licensedapps as L inner join software_matrix.discoveredapplications as D on L.Name = D.Name and D.Computers > L.Amount order by L.Name;"
+	str = "SELECT L.Name, L.Publisher, L.Amount, D.Computers, D.ID FROM software_matrix.licensedapps as L inner join software_matrix.discoveredapplications as D on L.Name = D.Name and D.Computers > L.Amount order by L.Name;"
 	rs.Open str, adoconn, 2, 1 'OpenType, LockType
 	if not rs.eof then
 		'Header Info
@@ -96,7 +99,7 @@ Function CheckLicenses()
 
 	do while not rs.eof
 		outputl = outputl & "<tr>" & vbcrlf
-		outputl = outputl & "  <td>" & rs("Name") & "</td>" & vbcrlf
+		outputl = outputl & "  <td><a href=""" & BaseURL & "/edit-appinfo.php?id=" & rs("ID") & """>" & rs("Name") & "</a></td>" & vbcrlf
 		outputl = outputl & "  <td>" & rs("Publisher") & "</td>" & vbcrlf
 		outputl = outputl & "  <td>" & rs("Amount") & "</td>" & vbcrlf
 		outputl = outputl & "  <td bgcolor=yellow>" & rs("Computers") & "</td>" & vbcrlf
