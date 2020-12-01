@@ -72,6 +72,9 @@ If filesys.FileExists(CSVPath) then
 	AllApps = GetFile(CSVPath)
 
 	if len(AllApps) > 100 then
+		'Fix for if a single quote exists in file
+		AllApps = replace(AllApps,"'","''")
+		
 		Set adoconn = CreateObject("ADODB.Connection")
 		Set rs = CreateObject("ADODB.Recordset")
 		adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
