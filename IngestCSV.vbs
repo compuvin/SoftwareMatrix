@@ -9,7 +9,7 @@ Dim adoconn
 Dim rs
 Dim str
 set filesys=CreateObject("Scripting.FileSystemObject")
-set xmlhttp = createobject("msxml2.xmlhttp.3.0")
+set xmlhttp = createobject("msxml2.serverxmlhttp.3.0")
 Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
@@ -462,7 +462,7 @@ Function Get_Organization_New()
 End function
 
 Function Get_Organization_Removed()
-	str = "Select * from discoveredapplications where LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by Name;"
+	str = "Select * from discoveredapplications where LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by LastDiscovered DESC, Name;"
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 	if not rs.eof then
 		'Header Info

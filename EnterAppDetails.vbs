@@ -3,7 +3,7 @@ Dim adoconn
 Dim rs
 Dim str
 dim WPData 'Web page text
-dim xmlhttp : set xmlhttp = createobject("msxml2.xmlhttp.3.0")
+dim xmlhttp : set xmlhttp = createobject("msxml2.serverxmlhttp.3.0")
 set filesys=CreateObject("Scripting.FileSystemObject")
 Dim strCurDir
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)

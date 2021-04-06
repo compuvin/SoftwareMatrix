@@ -2,7 +2,7 @@ Dim CurrID, CurrApp, CurrVer, CurrFree, CurrOS, CurrReason, CurrPC, CurrPlans, C
 Dim adoconn
 Dim rs
 Dim str
-set xmlhttp = createobject("msxml2.xmlhttp.3.0")
+set xmlhttp = createobject("msxml2.serverxmlhttp.3.0")
 dim WPURL 'Web page URL
 dim WPData 'Web page text
 set filesys=CreateObject("Scripting.FileSystemObject")

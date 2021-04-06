@@ -9,7 +9,7 @@ dim outputl 'Email body
 dim URLERR 'URLS with errors
 dim j 'Counter
 dim bofp 'Length of outputl before addition of new row. Used if we need to remove a false positive
-set xmlhttp = createobject("msxml2.xmlhttp.3.0")
+set xmlhttp = createobject("msxml2.serverxmlhttp.3.0")
 Dim adoconn
 Dim rs
 Dim str
