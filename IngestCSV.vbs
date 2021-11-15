@@ -13,6 +13,7 @@ set xmlhttp = createobject("msxml2.serverxmlhttp.3.0")
 Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
+Dim AppRenames()
 Dim Response 'For answers to prompts
 Dim PSSchema, PSTbl 'Define schema and table names
 PSSchema = "software_matrix"
@@ -80,6 +81,8 @@ If filesys.FileExists(CSVPath) then
 		adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
 					   "Database=" & PSSchema & "; User=" & DBUser & "; Password=" & DBPass & ";"
 
+		Get_App_Renames 'Uses apprename table to check regex for apps that match patterns and should be listed as the same app
+		
 		Get_PC_New_Updated 'List software Added/Updated from each PC
 		Get_PC_Removed 'List software removed from each PC
 
@@ -123,6 +126,15 @@ Function Get_PC_New_Updated()
 			CurrApp = mid(AllApps_org,1,instr(1,AllApps_org,",",1)-1)
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,",",1))
 		end if
+		'Check for apps that need to be renamed based on apprename table
+		Set re = New RegExp
+		for i = 0 to ubound(AppRenames,1)
+			re.Pattern = AppRenames(i,0)
+			If re.Test(CurrApp) then
+				CurrApp = AppRenames(i,1)
+				i = ubound(AppRenames,1)
+			End if
+		next
 		'msgbox CurrApp
 		'Ignore publisher
 		if left(AllApps_Org,1)="""" then
@@ -288,6 +300,15 @@ Function Get_PC_New_Updated()
 			CurrApp = mid(AllApps,1,instr(1,AllApps,",",1)-1)
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,",",1))
 		end if
+		'Check for apps that need to be renamed based on apprename table
+		Set re = New RegExp
+		for i = 0 to ubound(AppRenames,1)
+			re.Pattern = AppRenames(i,0)
+			If re.Test(CurrApp) then
+				CurrApp = AppRenames(i,1)
+				i = ubound(AppRenames,1)
+			End if
+		next
 		'msgbox CurrApp
 		'Get publisher
 		if left(AllApps,1)="""" then
@@ -489,6 +510,26 @@ Function Get_Organization_Removed()
 		if cdate(rs("LastDiscovered")) < (Date() - 7) then rs.delete
 		rs.movenext
 		if rs.eof then outputl = outputl & "</table>" & vbcrlf
+	loop
+	
+	rs.close
+End function
+
+Function Get_App_Renames()	
+	str = "select count(*) from apprename;"
+	redim AppRenames(cint((adoconn.Execute(str))(0)) - 1,1)
+	
+	str = "Select * from apprename;"
+	rs.Open str, adoconn, 2, 1 'OpenType, LockType
+		
+	i = 0
+
+	do while not rs.eof
+		AppRenames(i,0) = rs("RegEx")
+		AppRenames(i,1) = rs("RenameTo")
+		i = i + 1
+		
+		rs.movenext
 	loop
 	
 	rs.close
@@ -878,6 +919,10 @@ Function CheckForTables()
 		
 		PSTbl = "licensedapps"
 		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Name text, Publisher text, Amount int(11) DEFAULT NULL, Comments text);"
+		adoconn.Execute(str)
+		
+		PSTbl = "apprename"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, RegEx text, RenameTo text);"
 		adoconn.Execute(str)
 	end if
 	
