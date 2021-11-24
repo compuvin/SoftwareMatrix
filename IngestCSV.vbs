@@ -918,7 +918,7 @@ Function CheckForTables()
 		adoconn.Execute(str)
 		
 		PSTbl = "licensedapps"
-		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Name text, Publisher text, Amount int(11) DEFAULT NULL, Comments text);"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, Name VARCHAR(255) UNIQUE, Publisher text, Amount int(11) DEFAULT NULL, Comments text);"
 		adoconn.Execute(str)
 		
 		PSTbl = "apprename"
