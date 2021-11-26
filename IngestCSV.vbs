@@ -170,11 +170,11 @@ Function Get_PC_New_Updated()
 			end if
 			
 			if isnumeric(replace(CurrVer,".","")) and isnumeric(replace(rs("Version_Oldest"),".","")) and isnumeric(replace(rs("Version_Newest"),".","")) then
-				if int(replace(CurrVer,".","")) < int(replace(rs("Version_Oldest"),".","")) then
+				if int(PadVersion(CurrVer)) < int(PadVersion(rs("Version_Oldest"))) then
 					rs("Version_Oldest") = CurrVer
 					'msgbox CurrApp & " Updated -"
 				end if
-				if int(replace(CurrVer,".","")) > int(replace(rs("Version_Newest"),".","")) then
+				if int(PadVersion(CurrVer)) > int(PadVersion(rs("Version_Newest"))) then
 					rs("Version_Newest") = CurrVer
 					'msgbox CurrApp & " Updated +"
 				end if
@@ -534,6 +534,35 @@ Function Get_App_Renames()
 	
 	rs.close
 End function
+
+Function PadVersion(InputVersion)
+	Dim PaddedVersion
+	
+	j = 0
+	for i = 1 to len(InputVersion)
+		if mid(InputVersion,i,1) = "." Then
+			'msgbox mid(InputVersion,i - j,j)
+			if j < 6 then
+				PaddedVersion = PaddedVersion & left("000000",6 - j) & mid(InputVersion,i - j,j)
+			Else
+				PaddedVersion = PaddedVersion & mid(InputVersion,i - j,j)
+			end if
+			j = - 1
+		end if
+		j = j + 1
+	Next
+	if j > 0 and j < 6 then
+		PaddedVersion = PaddedVersion & left("000000",6 - j) & mid(InputVersion,len(InputVersion) - j + 1,j)
+	Else
+		if PaddedVersion = "" then
+			PaddedVersion = InputVersion
+		Else
+			PaddedVersion = PaddedVersion & mid(InputVersion,len(InputVersion) - j + 1,j)
+		end if
+	end if
+
+	PadVersion = PaddedVersion
+End Function
 
 Function SendMail(TextRcv,TextSubject)
   Const cdoSendUsingPickup = 1 'Send message using the local SMTP service pickup directory. 
