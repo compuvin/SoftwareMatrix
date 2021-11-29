@@ -170,11 +170,11 @@ Function Get_PC_New_Updated()
 			end if
 			
 			if isnumeric(replace(CurrVer,".","")) and isnumeric(replace(rs("Version_Oldest"),".","")) and isnumeric(replace(rs("Version_Newest"),".","")) then
-				if int(PadVersion(CurrVer)) < int(PadVersion(rs("Version_Oldest"))) then
+				if (int(PadVersion(CurrVer)) < int(PadVersion(rs("Version_Oldest"))) and int(GetMajorVersion(CurrVer)) <= int(GetMajorVersion(rs("Version_Oldest")))) or int(GetMajorVersion(CurrVer)) < int(GetMajorVersion(rs("Version_Oldest"))) then
 					rs("Version_Oldest") = CurrVer
 					'msgbox CurrApp & " Updated -"
 				end if
-				if int(PadVersion(CurrVer)) > int(PadVersion(rs("Version_Newest"))) then
+				if (int(PadVersion(CurrVer)) > int(PadVersion(rs("Version_Newest"))) and int(GetMajorVersion(CurrVer)) => int(GetMajorVersion(rs("Version_Newest")))) or int(GetMajorVersion(CurrVer)) > int(GetMajorVersion(rs("Version_Newest"))) then
 					rs("Version_Newest") = CurrVer
 					'msgbox CurrApp & " Updated +"
 				end if
@@ -562,6 +562,29 @@ Function PadVersion(InputVersion)
 	end if
 
 	PadVersion = PaddedVersion
+End Function
+
+Function GetMajorVersion(InputVersion)
+	Dim MajorVersion
+	
+	for i = 1 to len(InputVersion)
+		if mid(InputVersion,i,1) = "." Then
+			'msgbox left(InputVersion,i - 1)
+			MajorVersion = left(InputVersion,i - 1)
+			i = len(InputVersion)
+		end if
+	Next
+	if MajorVersion = "" then
+		if isnumeric(InputVersion) Then
+			MajorVersion = InputVersion
+		else
+			MajorVersion = 0
+		end if
+	end if
+	
+	'msgbox MajorVersion
+
+	GetMajorVersion = MajorVersion
 End Function
 
 Function SendMail(TextRcv,TextSubject)
