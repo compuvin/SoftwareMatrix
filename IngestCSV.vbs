@@ -170,11 +170,13 @@ Function Get_PC_New_Updated()
 			end if
 			
 			if isnumeric(replace(CurrVer,".","")) and isnumeric(replace(rs("Version_Oldest"),".","")) and isnumeric(replace(rs("Version_Newest"),".","")) then
-				if (CompareLargeNumbers(PadVersion(CurrVer), PadVersion(rs("Version_Oldest"))) = 2 and int(GetMajorVersion(CurrVer)) <= int(GetMajorVersion(rs("Version_Oldest")))) or int(GetMajorVersion(CurrVer)) < int(GetMajorVersion(rs("Version_Oldest"))) then
+				'if (CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Oldest"))) = 2 and int(GetMajorVersion(CurrVer)) <= int(GetMajorVersion(rs("Version_Oldest")))) or int(GetMajorVersion(CurrVer)) < int(GetMajorVersion(rs("Version_Oldest"))) then
+				if CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Oldest"))) = 2 then
 					rs("Version_Oldest") = CurrVer
 					'msgbox CurrApp & " Updated -"
 				end if
-				if (CompareLargeNumbers(PadVersion(CurrVer), PadVersion(rs("Version_Newest"))) = 1 and int(GetMajorVersion(CurrVer)) >= int(GetMajorVersion(rs("Version_Newest")))) or int(GetMajorVersion(CurrVer)) > int(GetMajorVersion(rs("Version_Newest"))) then
+				'if (CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Newest"))) = 1 and int(GetMajorVersion(CurrVer)) >= int(GetMajorVersion(rs("Version_Newest")))) or int(GetMajorVersion(CurrVer)) > int(GetMajorVersion(rs("Version_Newest"))) then
+				if CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Newest"))) = 1 then
 					rs("Version_Newest") = CurrVer
 					'msgbox CurrApp & " Updated +"
 				end if
@@ -589,15 +591,33 @@ Function GetMajorVersion(InputVersion)
 	GetMajorVersion = MajorVersion
 End Function
 
-Function CompareLargeNumbers(NumberOne, NumberTwo)
+Function CompareVersions(NumberOne, NumberTwo)
 	Dim WinningNum
 	
 	WinningNum = 0
 
 	If Len(NumberOne) > len(NumberTwo) Then
-		WinningNum = 1
+		'WinningNum = 1
+		for i = 1 to Len(NumberTwo)
+			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
+				WinningNum = 1
+				i = len(NumberTwo)
+			elseif mid(NumberOne,i,1) < mid(NumberTwo,i,1) then
+				WinningNum = 2
+				i = len(NumberTwo)
+			end if
+		next
 	elseif Len(NumberOne) < len(NumberTwo) then
-		WinningNum = 2
+		'WinningNum = 2
+		for i = 1 to Len(NumberOne)
+			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
+				WinningNum = 1
+				i = len(NumberOne)
+			elseif mid(NumberOne,i,1) < mid(NumberTwo,i,1) then
+				WinningNum = 2
+				i = len(NumberOne)
+			end if
+		next
 	Else
 		for i = 1 to Len(NumberOne)
 			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
@@ -612,7 +632,7 @@ Function CompareLargeNumbers(NumberOne, NumberTwo)
 	
 	'msgbox WinningNum
 	
-	CompareLargeNumbers = WinningNum
+	CompareVersions = WinningNum
 End Function 
 
 Function SendMail(TextRcv,TextSubject)
