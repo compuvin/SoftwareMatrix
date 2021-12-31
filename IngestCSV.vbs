@@ -146,7 +146,7 @@ Function Get_PC_New_Updated()
 		if left(AllApps_Org,1)="""" then
 			CurrVer = mid(AllApps_org,2,instr(1,AllApps_org,vbCrlf,1)-3)
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-3)
-		elseif instr(1,AllApps_org,vbCrlf,1) - 1 =< 0 then
+		elseif instr(1,AllApps_org,vbCrlf,1) - 1 <= 0 then
 			CurrVer = "0"
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
 			'msgbox CurrApp & " No version!"
@@ -170,11 +170,13 @@ Function Get_PC_New_Updated()
 			end if
 			
 			if isnumeric(replace(CurrVer,".","")) and isnumeric(replace(rs("Version_Oldest"),".","")) and isnumeric(replace(rs("Version_Newest"),".","")) then
-				if int(replace(CurrVer,".","")) < int(replace(rs("Version_Oldest"),".","")) then
+				'if (CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Oldest"))) = 2 and int(GetMajorVersion(CurrVer)) <= int(GetMajorVersion(rs("Version_Oldest")))) or int(GetMajorVersion(CurrVer)) < int(GetMajorVersion(rs("Version_Oldest"))) then
+				if CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Oldest"))) = 2 then
 					rs("Version_Oldest") = CurrVer
 					'msgbox CurrApp & " Updated -"
 				end if
-				if int(replace(CurrVer,".","")) > int(replace(rs("Version_Newest"),".","")) then
+				'if (CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Newest"))) = 1 and int(GetMajorVersion(CurrVer)) >= int(GetMajorVersion(rs("Version_Newest")))) or int(GetMajorVersion(CurrVer)) > int(GetMajorVersion(rs("Version_Newest"))) then
+				if CompareVersions(PadVersion(CurrVer), PadVersion(rs("Version_Newest"))) = 1 then
 					rs("Version_Newest") = CurrVer
 					'msgbox CurrApp & " Updated +"
 				end if
@@ -323,7 +325,7 @@ Function Get_PC_New_Updated()
 		if left(AllApps,1)="""" then
 			CurrVer = mid(AllApps,2,instr(1,AllApps,vbCrlf,1)-3)
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
-		elseif instr(1,AllApps,vbCrlf,1) - 1 =< 0 then
+		elseif instr(1,AllApps,vbCrlf,1) - 1 <= 0 then
 			CurrVer = "0"
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
 			'msgbox CurrApp & " No version!"
@@ -534,6 +536,104 @@ Function Get_App_Renames()
 	
 	rs.close
 End function
+
+Function PadVersion(InputVersion)
+	Dim PaddedVersion
+	
+	j = 0
+	for i = 1 to len(InputVersion)
+		if mid(InputVersion,i,1) = "." Then
+			'msgbox mid(InputVersion,i - j,j)
+			if j < 6 then
+				PaddedVersion = PaddedVersion & left("000000",6 - j) & mid(InputVersion,i - j,j)
+			Else
+				PaddedVersion = PaddedVersion & mid(InputVersion,i - j,j)
+			end if
+			j = - 1
+		end if
+		j = j + 1
+	Next
+	if j > 0 and j < 6 then
+		PaddedVersion = PaddedVersion & left("000000",6 - j) & mid(InputVersion,len(InputVersion) - j + 1,j)
+	Else
+		if PaddedVersion = "" then
+			PaddedVersion = InputVersion
+		Else
+			PaddedVersion = PaddedVersion & mid(InputVersion,len(InputVersion) - j + 1,j)
+		end if
+	end if
+	
+	'msgbox PaddedVersion
+
+	PadVersion = PaddedVersion
+End Function
+
+Function GetMajorVersion(InputVersion)
+	Dim MajorVersion
+	
+	for i = 1 to len(InputVersion)
+		if mid(InputVersion,i,1) = "." Then
+			'msgbox left(InputVersion,i - 1)
+			MajorVersion = left(InputVersion,i - 1)
+			i = len(InputVersion)
+		end if
+	Next
+	if MajorVersion = "" then
+		if isnumeric(InputVersion) Then
+			MajorVersion = InputVersion
+		else
+			MajorVersion = 0
+		end if
+	end if
+	
+	'msgbox MajorVersion
+
+	GetMajorVersion = MajorVersion
+End Function
+
+Function CompareVersions(NumberOne, NumberTwo)
+	Dim WinningNum
+	
+	WinningNum = 0
+
+	If Len(NumberOne) > len(NumberTwo) Then
+		'WinningNum = 1
+		for i = 1 to Len(NumberTwo)
+			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
+				WinningNum = 1
+				i = len(NumberTwo)
+			elseif mid(NumberOne,i,1) < mid(NumberTwo,i,1) then
+				WinningNum = 2
+				i = len(NumberTwo)
+			end if
+		next
+	elseif Len(NumberOne) < len(NumberTwo) then
+		'WinningNum = 2
+		for i = 1 to Len(NumberOne)
+			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
+				WinningNum = 1
+				i = len(NumberOne)
+			elseif mid(NumberOne,i,1) < mid(NumberTwo,i,1) then
+				WinningNum = 2
+				i = len(NumberOne)
+			end if
+		next
+	Else
+		for i = 1 to Len(NumberOne)
+			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
+				WinningNum = 1
+				i = len(NumberOne)
+			elseif mid(NumberOne,i,1) < mid(NumberTwo,i,1) then
+				WinningNum = 2
+				i = len(NumberOne)
+			end if
+		next
+	end if
+	
+	'msgbox WinningNum
+	
+	CompareVersions = WinningNum
+End Function 
 
 Function SendMail(TextRcv,TextSubject)
   Const cdoSendUsingPickup = 1 'Send message using the local SMTP service pickup directory. 
