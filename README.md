@@ -36,8 +36,8 @@ Run as needed.
 Allows the admin user to quickly answer questions about newly found applications (from the Security Report) to get all of the columns filled in for the application.
 The hope is to replace this with a web GUI.
 
+Web based GUI is available - https://github.com/compuvin/SoftwareMatrix-GUI
 
 To Do:
-- Create web GUI - Project started - https://github.com/compuvin/SoftwareMatrix-GUI
 - Create and Integrate WhatTheFOSS list
 - Better code documentation
