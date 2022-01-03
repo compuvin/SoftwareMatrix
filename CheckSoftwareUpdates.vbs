@@ -46,7 +46,7 @@ Set rs = CreateObject("ADODB.Recordset")
 adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
 			   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 				   
-str = "Select * from discoveredapplications where (not UpdateURL = '' and UpdateURL IS NOT NULL) or Version_Oldest <> Version_Newest order by Name;"
+str = "Select * from discoveredapplications where ((not UpdateURL = '' and UpdateURL IS NOT NULL) or Version_Oldest <> Version_Newest) and LastDiscovered = (select max(LastDiscovered) from discoveredapplications) order by Name;"
 rs.Open str, adoconn, 3, 3 'OpenType, LockType
 if not rs.eof then rs.MoveFirst
 
