@@ -572,7 +572,7 @@ Function CompareVersions(NumberOne, NumberTwo)
 	WinningNum = 0
 
 	If Len(NumberOne) > len(NumberTwo) Then
-		'WinningNum = 1
+		WinningNum = 1
 		for i = 1 to Len(NumberTwo)
 			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
 				WinningNum = 1
@@ -583,7 +583,7 @@ Function CompareVersions(NumberOne, NumberTwo)
 			end if
 		next
 	elseif Len(NumberOne) < len(NumberTwo) then
-		'WinningNum = 2
+		WinningNum = 2
 		for i = 1 to Len(NumberOne)
 			If mid(NumberOne,i,1) > mid(NumberTwo,i,1) Then
 				WinningNum = 1
