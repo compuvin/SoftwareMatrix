@@ -64,7 +64,7 @@ else
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptToEmail", RptToEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptFromEmail", RptFromEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "EmailSvr", EmailSvr
-	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", EditURL
+	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", BaseURL
 end if
 			   
 outputl = ""
