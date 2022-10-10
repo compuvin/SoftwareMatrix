@@ -64,7 +64,7 @@ else
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptToEmail", RptToEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptFromEmail", RptFromEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "EmailSvr", EmailSvr
-	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", BaseURL
+	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", EditURL
 end if
 			   
 outputl = ""
@@ -636,7 +636,7 @@ Function SendMail(TextRcv,TextSubject)
   'Type of authentication, NONE, Basic (Base64 encoded), NTLM
   objMessage.Configuration.Fields.Item _
   ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = cdoAnonymous
-  
+
   'Server port (typically 25)
   objMessage.Configuration.Fields.Item _
   ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 25
