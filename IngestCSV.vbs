@@ -650,10 +650,6 @@ Function SendMail(TextRcv,TextSubject)
   'Name or IP of Remote SMTP Server
   objMessage.Configuration.Fields.Item _
   ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = EmailSvr
-
-  'Type of authentication, NONE, Basic (Base64 encoded), NTLM
-  'objMessage.Configuration.Fields.Item _
-  '("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = cdoAnonymous
   
   'Type of authentication, NONE, Basic (Base64 encoded), NTLM
   objMessage.Configuration.Fields.Item _

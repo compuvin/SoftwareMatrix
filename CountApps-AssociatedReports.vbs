@@ -19,7 +19,11 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptToEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptToEmail" )
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
-	'Additional email settings found in Function SendMail()
+	EmailPort = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailPort" )
+	EmailAuthType = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailAuthType" )
+	EmailUserName = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailUserName" )
+	EmailPassword = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailPassword" )
+	'Additional email settings found in smapp.ini
 	
 	'WebGUI
 	BaseURL = ReadIni(strCurDir & "\smapp.ini", "WebGUI", "BaseURL" )
@@ -169,14 +173,26 @@ Function SendMail(TextRcv,TextSubject)
   'Name or IP of Remote SMTP Server
   objMessage.Configuration.Fields.Item _
   ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = EmailSvr
-
+  
   'Type of authentication, NONE, Basic (Base64 encoded), NTLM
   objMessage.Configuration.Fields.Item _
-  ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = cdoAnonymous
+  ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = EmailAuthType
+  
+  if EmailAuthType > 0 then
+
+	  'Your UserID on the SMTP server
+	  objMessage.Configuration.Fields.Item _
+	  ("http://schemas.microsoft.com/cdo/configuration/sendusername") = EmailUserName
+
+	  'Your password on the SMTP server
+	  objMessage.Configuration.Fields.Item _
+	  ("http://schemas.microsoft.com/cdo/configuration/sendpassword") = EmailPassword
+  
+  end if
 
   'Server port (typically 25)
   objMessage.Configuration.Fields.Item _
-  ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 25
+  ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = EmailPort
 
   'Use SSL for the connection (False or True)
   objMessage.Configuration.Fields.Item _
