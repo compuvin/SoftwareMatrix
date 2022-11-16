@@ -158,6 +158,7 @@ Function Get_PC_New_Updated()
 		if left(AllApps_Org,1)="""" then
 			CurrVer = mid(AllApps_org,2,instr(1,AllApps_org,vbCrlf,1)-3)
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
+			if len(CurrVer) = 0 then CurrVer = "0" 'No version!
 		elseif instr(1,AllApps_org,vbCrlf,1) - 1 <= 0 then
 			CurrVer = "0"
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
@@ -341,6 +342,7 @@ Function Get_PC_New_Updated()
 		if left(AllApps,1)="""" then
 			CurrVer = mid(AllApps,2,instr(1,AllApps,vbCrlf,1)-3)
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
+			if len(CurrVer) = 0 then CurrVer = "0" 'No version!
 		elseif instr(1,AllApps,vbCrlf,1) - 1 <= 0 then
 			CurrVer = "0"
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
