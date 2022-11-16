@@ -9,20 +9,20 @@ Dim strCurDir
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 
 'Gather variables from smapp.ini
-If filesys.FileExists(strCurDir & "\smapp.ini") then
+If filesys.FileExists(strCurDir & "..\smapp.ini") then
 	'Database
-	DBLocation = ReadIni(strCurDir & "\smapp.ini", "Database", "DBLocation" )
-	DBUser = ReadIni(strCurDir & "\smapp.ini", "Database", "DBUser" )
-	DBPass = ReadIni(strCurDir & "\smapp.ini", "Database", "DBPass" )
+	DBLocation = ReadIni(strCurDir & "..\smapp.ini", "Database", "DBLocation" )
+	DBUser = ReadIni(strCurDir & "..\smapp.ini", "Database", "DBUser" )
+	DBPass = ReadIni(strCurDir & "..\smapp.ini", "Database", "DBPass" )
 	
 	'Email - Defaults to anonymous login
-	RptToEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptToEmail" )
-	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
-	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
-	EmailPort = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailPort" )
-	EmailAuthType = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailAuthType" )
-	EmailUserName = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailUserName" )
-	EmailPassword = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailPassword" )
+	RptToEmail = ReadIni(strCurDir & "..\smapp.ini", "Email", "RptToEmail" )
+	RptFromEmail = ReadIni(strCurDir & "..\smapp.ini", "Email", "RptFromEmail" )
+	EmailSvr = ReadIni(strCurDir & "..\smapp.ini", "Email", "EmailSvr" )
+	EmailPort = ReadIni(strCurDir & "..\smapp.ini", "Email", "EmailPort" )
+	EmailAuthType = ReadIni(strCurDir & "..\smapp.ini", "Email", "EmailAuthType" )
+	EmailUserName = ReadIni(strCurDir & "..\smapp.ini", "Email", "EmailUserName" )
+	EmailPassword = ReadIni(strCurDir & "..\smapp.ini", "Email", "EmailPassword" )
 	'Additional email settings found in smapp.ini
 	
 	'WebGUI
