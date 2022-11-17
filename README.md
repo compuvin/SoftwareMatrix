@@ -1,8 +1,34 @@
 # SoftwareMatrix
 A series of scripts to document and report on software changes
 
+<!-- GETTING STARTED -->
+## Getting Started
+
+The goal is to make the process of getting up and running quick and easy. Follow the instructions below and you'll be tracking your installed software in no time!
+
+There is also a web based GUI that is available - https://github.com/compuvin/SoftwareMatrix-GUI
+
+### Prerequisites
+
 Requires MySQL 8.0
 Script will prompt for server information and create the necessary tables.
+
+### Installation
+
+To install, simply clone the repo and schedule tasks based on the information in the <a href="#usage">usage</a> section.
+
+1. Clone the repo
+   ```sh
+   git clone https://github.com/compuvin/SoftwareMatrix.git
+   ```
+2. Setup Scheduled Tasks (see <a href="#usage">usage</a>)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- USAGE EXAMPLES -->
+## Usage
 
 Scripts and their usage:
 
@@ -34,10 +60,46 @@ Creates email report on top 10 highest risk software based on vulnerabilities wi
 EnterAppDetails.vbs:
 Run as needed.
 Allows the admin user to quickly answer questions about newly found applications (from the Security Report) to get all of the columns filled in for the application.
-The hope is to replace this with a web GUI.
+This has been replaced with the web GUI but can still be used.
 
-Web based GUI is available - https://github.com/compuvin/SoftwareMatrix-GUI
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-To Do:
-- Create and Integrate WhatTheFOSS list
-- Better code documentation
+
+
+<!-- ROADMAP -->
+## Roadmap
+
+- [ ] Create a software crawler or agent for small deployments
+- [ ] Better code documentation
+- [ ] Create and Integrate WhatTheFOSS list
+
+See the [open issues](https://github.com/compuvin/SoftwareMatrix/issues) for a full list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- CONTRIBUTING -->
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- LICENSE -->
+## License
+
+Distributed under the GPL-3.0 license. See `LICENSE` for more information.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
