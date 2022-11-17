@@ -66,7 +66,22 @@ This has been replaced with the web GUI but can still be used.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+### Updating
 
+Updating is simple using git:
+
+1. Change directories to wherever your installation of the SoftwareMatrix is
+
+2. Update SoftwareMatrix using Git
+   ```sh
+   git pull SoftwareMatrix master
+   ```
+3. Or, if you like living life on the edge, update to the latest _develop_ (beta) version
+   ```sh
+   git pull SoftwareMatrix develop
+   ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
