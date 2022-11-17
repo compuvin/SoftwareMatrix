@@ -31,7 +31,11 @@ If filesys.FileExists(strCurDir & "\smapp.ini") then
 	RptToEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptToEmail" )
 	RptFromEmail = ReadIni(strCurDir & "\smapp.ini", "Email", "RptFromEmail" )
 	EmailSvr = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailSvr" )
-	'Additional email settings found in Function SendMail()
+	EmailPort = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailPort" )
+	EmailAuthType = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailAuthType" )
+	EmailUserName = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailUserName" )
+	EmailPassword = ReadIni(strCurDir & "\smapp.ini", "Email", "EmailPassword" )
+	'Additional email settings found in smapp.ini
 	
 	'WebGUI
 	BaseURL = ReadIni(strCurDir & "\smapp.ini", "WebGUI", "BaseURL" )
@@ -51,7 +55,11 @@ else
 	RptToEmail = inputbox("Enter the report email's To address:", "Software Matrix", "admin@company.com")
 	RptFromEmail = inputbox("Enter the report email's From address:", "Software Matrix", "admin@company.com")
 	EmailSvr = inputbox("Enter the FQDN or IP address of email server:", "Software Matrix", "mail.server.com")
-	msgbox "Additional email settings found in Function SendMail()"
+	EmailPort = "25"
+	EmailAuthType = "0" '0 = Do not authenticate, 1 = basic (clear-text) authentication, 2 = NTLM
+	EmailUserName = RptFromEmail
+	EmailPassword = ""
+	msgbox "Additional email settings found in smapp.ini"
 	
 	'WebGUI
 	BaseURL = inputbox("Enter the base URL for the Software Matrix GUI (Web GUI available at https://github.com/compuvin/SoftwareMatrix-GUI):", "Software Matrix", "http://www.intranet.com")
@@ -64,6 +72,10 @@ else
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptToEmail", RptToEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "RptFromEmail", RptFromEmail
 	WriteIni strCurDir & "\smapp.ini", "Email", "EmailSvr", EmailSvr
+	WriteIni strCurDir & "\smapp.ini", "Email", "EmailPort", EmailPort
+	WriteIni strCurDir & "\smapp.ini", "Email", "EmailAuthType", EmailAuthType
+	WriteIni strCurDir & "\smapp.ini", "Email", "EmailUserName", EmailUserName
+	WriteIni strCurDir & "\smapp.ini", "Email", "EmailPassword", EmailPassword
 	WriteIni strCurDir & "\smapp.ini", "WebGUI", "BaseURL", BaseURL
 end if
 			   
@@ -145,7 +157,8 @@ Function Get_PC_New_Updated()
 		'Get version
 		if left(AllApps_Org,1)="""" then
 			CurrVer = mid(AllApps_org,2,instr(1,AllApps_org,vbCrlf,1)-3)
-			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-3)
+			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
+			if len(CurrVer) = 0 then CurrVer = "0" 'No version!
 		elseif instr(1,AllApps_org,vbCrlf,1) - 1 <= 0 then
 			CurrVer = "0"
 			AllApps_Org = right(AllApps_Org,len(AllApps_Org)-instr(1,AllApps_Org,vbCrlf,1)-1)
@@ -286,11 +299,17 @@ Function Get_PC_New_Updated()
 	loop
 	
 	'PCs - Whats new/old/changed
-	AllApps = right(AllApps,len(AllApps)-33)
+	'AllApps = right(AllApps,len(AllApps)-33)
+	AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
 	do while len(AllApps) > 10
 		'Get PC name
-		CurrPC = mid(AllApps,1,instr(1,AllApps,",",1)-1)
-		AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,",",1))
+		if left(AllApps,1)="""" then
+			CurrPC = mid(AllApps,2,instr(1,AllApps,""",",1)-2)
+			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,""",",1)-1)
+		else
+			CurrPC = mid(AllApps,1,instr(1,AllApps,",",1)-1)
+			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,",",1))
+		end if
 		'msgbox CurrPC
 		'Get application
 		if left(AllApps,1)="""" then
@@ -323,6 +342,7 @@ Function Get_PC_New_Updated()
 		if left(AllApps,1)="""" then
 			CurrVer = mid(AllApps,2,instr(1,AllApps,vbCrlf,1)-3)
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
+			if len(CurrVer) = 0 then CurrVer = "0" 'No version!
 		elseif instr(1,AllApps,vbCrlf,1) - 1 <= 0 then
 			CurrVer = "0"
 			AllApps = right(AllApps,len(AllApps)-instr(1,AllApps,vbCrlf,1)-1)
@@ -632,14 +652,26 @@ Function SendMail(TextRcv,TextSubject)
   'Name or IP of Remote SMTP Server
   objMessage.Configuration.Fields.Item _
   ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = EmailSvr
-
+  
   'Type of authentication, NONE, Basic (Base64 encoded), NTLM
   objMessage.Configuration.Fields.Item _
-  ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = cdoAnonymous
+  ("http://schemas.microsoft.com/cdo/configuration/smtpauthenticate") = EmailAuthType
+  
+  if EmailAuthType > 0 then
+
+	  'Your UserID on the SMTP server
+	  objMessage.Configuration.Fields.Item _
+	  ("http://schemas.microsoft.com/cdo/configuration/sendusername") = EmailUserName
+
+	  'Your password on the SMTP server
+	  objMessage.Configuration.Fields.Item _
+	  ("http://schemas.microsoft.com/cdo/configuration/sendpassword") = EmailPassword
+  
+  end if
 
   'Server port (typically 25)
   objMessage.Configuration.Fields.Item _
-  ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 25
+  ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = EmailPort
 
   'Use SSL for the connection (False or True)
   objMessage.Configuration.Fields.Item _
