@@ -1,5 +1,5 @@
-# SoftwareMatrix
 <a name="readme-top"></a>
+# SoftwareMatrix
 A series of scripts to document and report on software changes
 
 <!-- GETTING STARTED -->
@@ -105,3 +105,5 @@ Don't forget to give the project a star! Thanks again!
 Distributed under the GPL-3.0 license. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+[![CodeFactor](https://www.codefactor.io/repository/github/compuvin/softwarematrix/badge)](https://www.codefactor.io/repository/github/compuvin/softwarematrix)
