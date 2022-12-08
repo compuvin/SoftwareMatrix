@@ -61,13 +61,13 @@ if len(CurrID) > 0 and isnumeric(CurrID) then
 		if CurrUpdate = "None" then
 			CurrURL = ""
 			CurrQTH = 0
-			CurrVar = 10
+			CurrVar = 10 + len(CurrVer)
 		else
 			CurrURL = inputbox("Enter the URL where the version number (" & CurrVer & ") can be found:", "Software Matrix", CurrURL)
 			if CurrURL = vbFalse then WScript.Quit 'User cancelled
 			if len(CurrURL) = 0 then
 				CurrQTH = 0
-				CurrVar = 10
+				CurrVar = 10 + len(CurrVer)
 			else
 				'Pull website
 				xmlhttp.open "get", CurrURL, false
@@ -81,7 +81,7 @@ if len(CurrID) > 0 and isnumeric(CurrID) then
 					CurrQTH = inputbox("The version (" & CurrVer & ") was not found on the URL that was entered. You should leave this blank and verify that the URL is correct:", "Software Matrix", CurrQTH)
 				end if
 				if CurrQTH = vbFalse then WScript.Quit 'User cancelled
-				if not CurrQTH = "" and not CurrQTH = "0" then CurrVar = inputbox("Leave this at 10 unless you know what you are doing:", "Software Matrix", CurrVar) else CurrVar = 10
+				if not CurrQTH = "" and not CurrQTH = "0" then CurrVar = inputbox("Leave this at the default unless you know what you are doing:", "Software Matrix", CurrVar) else CurrVar = 10 + len(CurrVer)
 				if CurrVar = vbFalse then WScript.Quit 'User cancelled
 			end if
 		end if
