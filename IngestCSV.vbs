@@ -222,6 +222,7 @@ Function Get_PC_New_Updated()
 				if len(rs("UpdateURL")) > 1 then
 					if int(rs("UpdatePageQTH")) & 0 = 0 then UpdatePageQTH = 0 else UpdatePageQTH = int(rs("UpdatePageQTH")) 'Fix NULL entries in integer field
 					if int(rs("UpdatePageQTHVarience")) & 0 = 0 then UpdatePageQTHVarience = 0 else UpdatePageQTHVarience = int(rs("UpdatePageQTHVarience")) 'Fix NULL entries in integer field
+					if UpdatePageQTHVarience = 10 + len(rs("Version_Newest")) then UpdatePageQTHVarience = 10 + len(CurrVer) 'Update the varience if it has never been updated and the version length is different
 					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & UpdatePageQTH & "','" & UpdatePageQTHVarience & "');"
 				else
 					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "');"
@@ -248,7 +249,9 @@ Function Get_PC_New_Updated()
 						yfound = True
 						'msgbox "New app - major version change (2)" & vbCrlf & CurrApp
 						
-						str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & instr(1,WPData,CurrVer,0) & "','" & int(rs("UpdatePageQTHVarience")) & "');"
+						UpdatePageQTHVarience = int(rs("UpdatePageQTHVarience"))
+						if UpdatePageQTHVarience = 10 + len(rs("Version_Newest")) then UpdatePageQTHVarience = 10 + len(CurrVer) 'Update the varience if it has never been updated and the version length is different
+						str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & instr(1,WPData,CurrVer,0) & "','" & UpdatePageQTHVarience & "');"
 						adoconn.Execute(str)
 					end if
 				end if
@@ -289,7 +292,7 @@ Function Get_PC_New_Updated()
 				
 				if TestFOSSFree = "Y" or TestFOSSOS = "Y" then TestFOSS = "Y"
 		  
-				str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & TestFOSSFree & "','" & TestFOSSOS & "','" & TestFOSS & "');"
+				str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & TestFOSSFree & "','" & TestFOSSOS & "','" & TestFOSS & "','" & (10 + len(CurrVer)) & "');"
 				adoconn.Execute(str)
 				
 				'msgbox "Added: " & CurrApp & " - " & CurrVer
