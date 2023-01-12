@@ -14,6 +14,7 @@ Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 Dim AppRenames()
+Dim RenameTo, RenameEx 'AI App Renaming
 Dim Response 'For answers to prompts
 Dim PSSchema, PSTbl 'Define schema and table names
 PSSchema = "software_matrix"
@@ -231,6 +232,42 @@ Function Get_PC_New_Updated()
 			end if
 			rs.close
 			
+			'Machine Learning App Renames
+			if yfound = True then
+				yfound = false 'temporary so we can use the variable
+				Set re = New RegExp
+				RenameEx = Replace(CurrAppNoVer,"_",".") 'To meet RegEx format
+				RenameEx = Replace(RenameEx," %","*") 'To meet RegEx format
+				RenameEx = Replace(RenameEx,"%","*") 'To meet RegEx format
+				RenameEx = Replace(Replace(RenameEx,"(","\("),")","\)") 'Excape ( and )
+				RenameTo = replace(replace(Replace(CurrAppNoVer," %",""),"%",""),"_","")
+				
+				str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
+				rs.Open str, adoconn, 3, 3 'OpenType, LockType
+				
+				if not rs.eof then
+					rs.MoveFirst
+				end if
+
+				do while not rs.eof
+					re.Pattern = rs("RegEx")
+					If re.Test(CurrApp) then
+						rs("Hits") = int(rs("Hits")) + 1
+						yfound = True
+						rs.update
+						rs.movenext
+					end if
+				loop
+				
+				if yfound = false then
+					str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','0','0');"
+					adoconn.Execute(str)
+				end if
+				
+				rs.close
+				yfound = True 'Set is back to true
+			end if
+			
 			if yfound = false then
 				str = "Select * from discoveredapplications where Name like '" & left(CurrApp,len(CurrApp)/2) & "%' and not UpdateURL = '' and UpdateURL IS NOT NULL;"
 				rs.Open str, adoconn, 2, 1 'OpenType, LockType
@@ -253,9 +290,48 @@ Function Get_PC_New_Updated()
 						if UpdatePageQTHVarience = 10 + len(rs("Version_Newest")) then UpdatePageQTHVarience = 10 + len(CurrVer) 'Update the varience if it has never been updated and the version length is different
 						str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & instr(1,WPData,CurrVer,0) & "','" & UpdatePageQTHVarience & "');"
 						adoconn.Execute(str)
+						RenameTo = rs("Name")
 					end if
 				end if
 				rs.close
+				
+				'Machine Learning App Renames
+				if yfound = True then
+					yfound = false 'temporary so we can use the variable
+					Set re = New RegExp
+					for i = 1 to len(CurrApp)
+						if not left(CurrApp,i) = Left(RenameTo,i) then
+							If right(RenameTo,1) = " " then i = i - 1 'Remove space at the end if there is one
+							RenameTo = Left(RenameTo,i)
+							RenameEx = Left(RenameTo,i) & "*"
+							i = len(CurrApp)
+						end if
+					next
+					str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
+					rs.Open str, adoconn, 3, 3 'OpenType, LockType
+					
+					if not rs.eof then
+						rs.MoveFirst
+					end if
+
+					do while not rs.eof
+						re.Pattern = rs("RegEx")
+						If re.Test(CurrApp) then
+							rs("Hits") = int(rs("Hits")) + 1
+							yfound = True
+							rs.update
+							rs.movenext
+						end if
+					loop
+					
+					if yfound = false then
+						str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','0','0');"
+						adoconn.Execute(str)
+					end if
+					
+					rs.close
+					yfound = True 'Set is back to true
+				end if
 			end if
 			
 			if yfound = false then
@@ -506,7 +582,12 @@ Function Get_Organization_New()
 End function
 
 Function Get_Organization_Removed()
+	Dim RenameConf()
 	str = "Select * from discoveredapplications where LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by LastDiscovered DESC, Name;"
+	redim RenameConf(cint((adoconn.Execute(replace(str,"*","count(*)")))(0)) - 1)
+	i = 0
+	'msgbox UBound(RenameConf)
+	
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 	if not rs.eof then
 		'Header Info
@@ -530,19 +611,49 @@ Function Get_Organization_Removed()
 		outputl = outputl & "  <td>" & rs("LastDiscovered") & "</td>" & vbcrlf
 		outputl = outputl & "</tr>" & vbcrlf
 	
-		if cdate(rs("LastDiscovered")) < (Date() - 7) then rs.delete
+		if cdate(rs("LastDiscovered")) < (Date() - 7) then
+			RenameConf(i) = rs("Name")
+			rs.delete
+		Else
+			RenameConf(i) = ""
+		end if
+		i = i + 1
 		rs.movenext
 		if rs.eof then outputl = outputl & "</table>" & vbcrlf
 	loop
 	
 	rs.close
+	
+	'Machine Learning App Renames - Confirm
+	if UBound(RenameConf) > 0 then
+		Set re = New RegExp
+		
+		str = "Select * from apprename where Confirmed < 5;"
+		rs.Open str, adoconn, 3, 3 'OpenType, LockType
+		
+		if not rs.eof then
+			rs.MoveFirst
+		end if
+
+		do while not rs.eof
+			re.Pattern = rs("RegEx")
+			for i = 0 to UBound(RenameConf)
+				If re.Test(RenameConf(i)) and not RenameConf(i) = "" then
+					'msgbox rs("RenameTo") & vbCrlf & RenameConf(i)
+					rs("Confirmed") = int(rs("Confirmed")) + 1
+					rs.update
+				end if
+			next
+			rs.movenext
+	loop
+	end if
 End function
 
 Function Get_App_Renames()	
-	str = "select count(*) from apprename;"
+	str = "select count(*) from apprename where Hits = 5 and Confirmed = 5;"
 	redim AppRenames(cint((adoconn.Execute(str))(0)) - 1,1)
 	
-	str = "Select * from apprename;"
+	str = "Select * from apprename where Hits = 5 and Confirmed = 5;"
 	rs.Open str, adoconn, 2, 1 'OpenType, LockType
 		
 	i = 0
@@ -1032,7 +1143,7 @@ Function CheckForTables()
 		adoconn.Execute(str)
 		
 		PSTbl = "apprename"
-		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, RegEx text, RenameTo text);"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, RegEx text, RenameTo text, Hits INT NOT NULL DEFAULT '0', Confirmed INT NOT NULL DEFAULT '0');"
 		adoconn.Execute(str)
 	end if
 	
