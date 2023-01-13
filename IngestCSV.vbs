@@ -260,7 +260,7 @@ Function Get_PC_New_Updated()
 				loop
 				
 				if yfound = false then
-					str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','0','0');"
+					str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
 					adoconn.Execute(str)
 				end if
 				
@@ -325,7 +325,7 @@ Function Get_PC_New_Updated()
 					loop
 					
 					if yfound = false then
-						str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','0','0');"
+						str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
 						adoconn.Execute(str)
 					end if
 					
