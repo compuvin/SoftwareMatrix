@@ -638,10 +638,12 @@ Function Get_Organization_Removed()
 		do while not rs.eof
 			re.Pattern = rs("RegEx")
 			for i = 0 to UBound(RenameConf)
-				If re.Test(RenameConf(i)) and not RenameConf(i) = "" then
-					'msgbox rs("RenameTo") & vbCrlf & RenameConf(i)
-					rs("Confirmed") = int(rs("Confirmed")) + 1
-					rs.update
+				If not RenameConf(i) = "" then
+					if re.Test(RenameConf(i)) then
+						'msgbox rs("RenameTo") & vbCrlf & RenameConf(i)
+						rs("Confirmed") = int(rs("Confirmed")) + 1
+						rs.update
+					end if
 				end if
 			next
 			rs.movenext

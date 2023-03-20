@@ -66,13 +66,13 @@ Function CountApps()
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 
 	do while not rs.eof
-		str = "select count(*) from applicationsdump where Name = '" & rs("Name") & "';"
+		str = "select count(*) from applicationsdump where Name = '" & replace(rs("Name"),"'","''") & "';"
 		CountName = adoconn.Execute(str) 'Kind of a hack way of doing this, results in an array with 0 being the count
 		rs("Computers") = CountName(0)
 		'msgbox rs("Name") & vbCrlf & CountName(0)
 		
 		'Fix discovered apps that have no instances of the Version_Newest
-		str = "select count(*) from applicationsdump where Name = '" & rs("Name") & "' and Version = '" & rs("Version_Newest") & "';"
+		str = "select count(*) from applicationsdump where Name = '" & replace(rs("Name"),"'","''") & "' and Version = '" & rs("Version_Newest") & "';"
 		CountName = adoconn.Execute(str) 'Kind of a hack way of doing this, results in an array with 0 being the count
 		if CountName(0) = "0" then rs("Version_Newest") = rs("Version_Oldest")
 		'if CountName(0) = "0" then msgbox rs("Name")
