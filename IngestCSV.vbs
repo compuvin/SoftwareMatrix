@@ -14,7 +14,7 @@ Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 Dim AppRenames()
-Dim RenameTo, RenameEx 'AI App Renaming
+Dim RenameTo, RenameEx, RenamePrev 'AI App Renaming
 Dim Response 'For answers to prompts
 Dim PSSchema, PSTbl 'Define schema and table names
 PSSchema = "software_matrix"
@@ -229,44 +229,10 @@ Function Get_PC_New_Updated()
 					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "');"
 				end if
 				adoconn.Execute(str)
+				RenamePrev = rs("Name")
 			end if
 			rs.close
 			
-			'Machine Learning App Renames
-			if yfound = True then
-				yfound = false 'temporary so we can use the variable
-				Set re = New RegExp
-				RenameEx = Replace(CurrAppNoVer,"_",".") 'To meet RegEx format
-				RenameEx = Replace(RenameEx," %","*") 'To meet RegEx format
-				RenameEx = Replace(RenameEx,"%","*") 'To meet RegEx format
-				RenameEx = Replace(Replace(RenameEx,"(","\("),")","\)") 'Excape ( and )
-				RenameTo = replace(replace(Replace(CurrAppNoVer," %",""),"%",""),"_","")
-				
-				str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
-				rs.Open str, adoconn, 3, 3 'OpenType, LockType
-				
-				if not rs.eof then
-					rs.MoveFirst
-				end if
-
-				do while not rs.eof
-					re.Pattern = rs("RegEx")
-					If re.Test(CurrApp) then
-						rs("Hits") = int(rs("Hits")) + 1
-						yfound = True
-						rs.update
-						rs.movenext
-					end if
-				loop
-				
-				if yfound = false then
-					str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
-					adoconn.Execute(str)
-				end if
-				
-				rs.close
-				yfound = True 'Set is back to true
-			end if
 			
 			if yfound = false then
 				str = "Select * from discoveredapplications where Name like '" & left(CurrApp,len(CurrApp)/2) & "%' and not UpdateURL = '' and UpdateURL IS NOT NULL;"
@@ -290,48 +256,10 @@ Function Get_PC_New_Updated()
 						if UpdatePageQTHVarience = 10 + len(rs("Version_Newest")) then UpdatePageQTHVarience = 10 + len(CurrVer) 'Update the varience if it has never been updated and the version length is different
 						str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & instr(1,WPData,CurrVer,0) & "','" & UpdatePageQTHVarience & "');"
 						adoconn.Execute(str)
-						RenameTo = rs("Name")
+						RenamePrev = rs("Name")
 					end if
 				end if
 				rs.close
-				
-				'Machine Learning App Renames
-				if yfound = True then
-					yfound = false 'temporary so we can use the variable
-					Set re = New RegExp
-					for i = 1 to len(CurrApp)
-						if not left(CurrApp,i) = Left(RenameTo,i) then
-							If right(RenameTo,1) = " " then i = i - 1 'Remove space at the end if there is one
-							RenameTo = Left(RenameTo,i)
-							RenameEx = Left(RenameTo,i) & "*"
-							i = len(CurrApp)
-						end if
-					next
-					str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
-					rs.Open str, adoconn, 3, 3 'OpenType, LockType
-					
-					if not rs.eof then
-						rs.MoveFirst
-					end if
-
-					do while not rs.eof
-						re.Pattern = rs("RegEx")
-						If re.Test(CurrApp) then
-							rs("Hits") = int(rs("Hits")) + 1
-							yfound = True
-							rs.update
-							rs.movenext
-						end if
-					loop
-					
-					if yfound = false then
-						str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
-						adoconn.Execute(str)
-					end if
-					
-					rs.close
-					yfound = True 'Set is back to true
-				end if
 			end if
 			
 			if yfound = false then
@@ -372,6 +300,8 @@ Function Get_PC_New_Updated()
 				adoconn.Execute(str)
 				
 				'msgbox "Added: " & CurrApp & " - " & CurrVer
+			else 'Machine Learning App Renames
+				Add_App_Renames CurrApp, RenamePrev, CurrAppNoVer
 			end if
 		end if
 		
@@ -670,6 +600,78 @@ Function Get_App_Renames()
 	
 	rs.close
 End function
+
+Function Add_App_Renames(MLCurrApp, MLPrevApp, MLCurrAppNoVer) 'Machine Learning App Renames
+	Dim ThingsToKeep, MLfound
+	ThingsToKeep = Array("(x86)", "(x64)", "(64-bit)", "(32-bit)") 'These strings will remain in any app renames if they exist
+	MLfound = false
+	
+	'Change MLCurrAppNoVer so that it matches RegEx format
+	MLCurrAppNoVer = Replace(MLCurrAppNoVer,"%","*")
+	MLCurrAppNoVer = Replace(MLCurrAppNoVer,"_",".")
+	
+	Set re = New RegExp
+	for i = 1 to len(MLCurrApp)
+		if not left(MLCurrApp,i) = Left(MLPrevApp,i) then
+			i = i - 1 'Because the last character didn't match
+			If right(MLPrevApp,1) = " " then i = i - 1 'Remove space at the end if there is one
+			RenameTo = Left(MLPrevApp,i)
+			'msgbox left(MLPrevApp,i) + vbcrlf + MLCurrAppNoVer
+			RenameEx = Left(MLPrevApp,i)
+			if len(RenameEx) < len(MLCurrAppNoVer) then
+				RenameEx = RenameEx + mid(MLCurrAppNoVer,i+1,len(MLCurrAppNoVer)-i+1)
+			else
+				RenameEx = RenameEx + "*"
+			end if
+			i = len(MLCurrApp)
+		end if
+	next
+	
+	'Rule = Done leave a space in the second to last character or period in last character
+	if left(right(RenameTo,2),1) = " " then RenameTo = left(RenameTo,len(RenameTo)-2)
+	if right(RenameTo,1) = "." then RenameTo = left(RenameTo,len(RenameTo)-1)
+	
+	'Make sure we keep strings in ThingsToKeep
+	for i = 0 to ubound(ThingsToKeep)
+		if instr(1,MLCurrApp,ThingsToKeep(i)) then
+			if not instr(1,RenameTo,ThingsToKeep(i)) then RenameTo = RenameTo + " " + ThingsToKeep(i)
+			if len(RenameEx) > instr(1,MLCurrApp,ThingsToKeep(i)) + len(ThingsToKeep(i)) then
+				RenameEx = mid(RenameEx,1,instr(1,MLCurrApp,ThingsToKeep(i))-1) + ThingsToKeep(i) + right(RenameEx,len(RenameEx)-instr(1,MLCurrApp,ThingsToKeep(i))-len(ThingsToKeep(i)))
+			else
+				RenameEx = mid(RenameEx,1,instr(1,MLCurrApp,ThingsToKeep(i))-1) + ThingsToKeep(i)
+			end if
+			'msgbox "We kept " + ThingsToKeep(i)
+		end if
+	next
+	
+	RenameEx = Replace(RenameEx," *","*") 'Remove unnecessary space
+	RenameEx = Replace(Replace(RenameEx,"(","\\("),")","\\)") 'Excape ( and )
+	RenameEx = Replace(RenameEx,"+","\\+") 'Excape +
+	
+	'msgbox "Current App: " + MLCurrApp + vbcrlf + "Previous App: " + MLPrevApp + vbcrlf + vbcrlf + "Rename To: " + RenameTo + vbcrlf + "Pattern: " + RenameEx
+	
+	str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
+	rs.Open str, adoconn, 3, 3 'OpenType, LockType
+	
+	if not rs.eof then rs.MoveFirst
+
+	do while not rs.eof
+		re.Pattern = rs("RegEx")
+		If re.Test(MLCurrApp) then
+			rs("Hits") = int(rs("Hits")) + 1
+			yfound = True
+			rs.update
+			rs.movenext
+		end if
+	loop
+	
+	if MLfound = false then
+		str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
+		adoconn.Execute(str)
+	end if
+	
+	rs.close
+End Function
 
 Function PadVersion(InputVersion)
 	Dim PaddedVersion
