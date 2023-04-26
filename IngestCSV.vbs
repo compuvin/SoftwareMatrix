@@ -647,30 +647,33 @@ Function Add_App_Renames(MLCurrApp, MLPrevApp, MLCurrAppNoVer) 'Machine Learning
 	RenameEx = Replace(RenameEx," *","*") 'Remove unnecessary space
 	RenameEx = Replace(Replace(RenameEx,"(","\\("),")","\\)") 'Excape ( and )
 	RenameEx = Replace(RenameEx,"+","\\+") 'Excape +
+	RenameTo = Replace(RenameTo,"  "," ") 'Remove unnecessary space in RenameTo
 	
 	'msgbox "Current App: " + MLCurrApp + vbcrlf + "Previous App: " + MLPrevApp + vbcrlf + vbcrlf + "Rename To: " + RenameTo + vbcrlf + "Pattern: " + RenameEx
 	
-	str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
-	rs.Open str, adoconn, 3, 3 'OpenType, LockType
-	
-	if not rs.eof then rs.MoveFirst
+	if not MLCurrApp = RenameTo then 'After all of the processing the current app name might be good enough
+		str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
+		rs.Open str, adoconn, 3, 3 'OpenType, LockType
+		
+		if not rs.eof then rs.MoveFirst
 
-	do while not rs.eof
-		re.Pattern = rs("RegEx")
-		If re.Test(MLCurrApp) then
-			rs("Hits") = int(rs("Hits")) + 1
-			yfound = True
-			rs.update
-			rs.movenext
+		do while not rs.eof
+			re.Pattern = rs("RegEx")
+			If re.Test(MLCurrApp) then
+				rs("Hits") = int(rs("Hits")) + 1
+				MLfound = True
+				rs.update
+				rs.movenext
+			end if
+		loop
+		
+		if MLfound = false then
+			str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
+			adoconn.Execute(str)
 		end if
-	loop
-	
-	if MLfound = false then
-		str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
-		adoconn.Execute(str)
+		
+		rs.close
 	end if
-	
-	rs.close
 End Function
 
 Function PadVersion(InputVersion)
