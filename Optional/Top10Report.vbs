@@ -86,7 +86,7 @@ Function TopTenUpdate()
 	rs.close
 	
 	'Top 10 by App
-	str = "SELECT Name, trim(group_concat(' ', Computer)) 'Computers', count(Computer) 'Need Updates', Version_Newest from (SELECT A.ID, A.Computer, A.Name, A.Version, D.Version_Newest FROM software_matrix.applicationsdump as A inner join software_matrix.discoveredapplications as D on A.Name = D.Name where A.Version <> D.Version_Newest) as NeedsUpdate group by Name order by count(Computer) DESC LIMIT 10;"
+	str = "SELECT Name, trim(group_concat(' ', Computer)) 'Computers', count(Computer) 'Need Updates', max(Version_Newest) 'Version_Newest' from (SELECT A.ID, A.Computer, A.Name, A.Version, D.Version_Newest FROM software_matrix.applicationsdump as A inner join software_matrix.discoveredapplications as D on A.Name = D.Name where A.Version <> D.Version_Newest) as NeedsUpdate group by Name order by count(Computer) DESC LIMIT 10;"
 	rs.Open str, adoconn, 2, 1 'OpenType, LockType
 	if not rs.eof then
 		'Header Info
