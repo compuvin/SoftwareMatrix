@@ -37,7 +37,7 @@ outputl = ""
 
 Set adoconn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
-adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+adoconn.Open "Driver={MySQL ODBC 8.1 ANSI Driver};Server=" & DBLocation & ";" & _
 			"Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 
 CountApps 'Count apps and update Computers column on discoveredapplications table
