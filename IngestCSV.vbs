@@ -660,9 +660,11 @@ Function Add_App_Renames(MLCurrApp, MLPrevApp, MLCurrAppNoVer) 'Machine Learning
 		do while not rs.eof
 			re.Pattern = rs("RegEx")
 			If re.Test(MLCurrApp) then
-				rs("Hits") = int(rs("Hits")) + 1
+				if int(rs("Hits")) < 5 then 
+					rs("Hits") = int(rs("Hits")) + 1
+					rs.update
+				end if
 				MLfound = True
-				rs.update
 				rs.movenext
 			end if
 		loop
