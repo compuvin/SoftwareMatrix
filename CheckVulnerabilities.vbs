@@ -44,7 +44,7 @@ outputl = "No installed applications matched vulnerabilities added within the la
 if len(WPData) > 100 then
 	Set adoconn = CreateObject("ADODB.Connection")
 	Set rs = CreateObject("ADODB.Recordset")
-	adoconn.Open "Driver={MySQL ODBC 8.1 ANSI Driver};Server=" & DBLocation & ";" & _
+	adoconn.Open "Driver={MySQL ODBC 8.2 ANSI Driver};Server=" & DBLocation & ";" & _
 				   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 	
 	str = "Select * from discoveredapplications;"

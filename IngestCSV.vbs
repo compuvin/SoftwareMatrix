@@ -91,7 +91,7 @@ If filesys.FileExists(CSVPath) then
 		
 		Set adoconn = CreateObject("ADODB.Connection")
 		Set rs = CreateObject("ADODB.Recordset")
-		adoconn.Open "Driver={MySQL ODBC 8.1 ANSI Driver};Server=" & DBLocation & ";" & _
+		adoconn.Open "Driver={MySQL ODBC 8.2 ANSI Driver};Server=" & DBLocation & ";" & _
 					   "Database=" & PSSchema & "; User=" & DBUser & "; Password=" & DBPass & ";"
 
 		Get_App_Renames 'Uses apprename table to check regex for apps that match patterns and should be listed as the same app
