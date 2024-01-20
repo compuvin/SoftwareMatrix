@@ -11,7 +11,7 @@ There is also a web based GUI that is available - https://github.com/compuvin/So
 
 ### Prerequisites
 
-Requires MySQL 8.2
+Requires MySQL 8.3
 
 Script will prompt for server information and create the necessary tables.
 
