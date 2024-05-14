@@ -25,7 +25,7 @@ CurrID = inputbox("Enter the reference ID of the application that you would like
 if len(CurrID) > 0 and isnumeric(CurrID) then
 	Set adoconn = CreateObject("ADODB.Connection")
 	Set rs = CreateObject("ADODB.Recordset")
-	adoconn.Open "Driver={MySQL ODBC 8.3 ANSI Driver};Server=" & DBLocation & ";" & _
+	adoconn.Open "Driver={MySQL ODBC 8.4 ANSI Driver};Server=" & DBLocation & ";" & _
 					   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 	
 	str = "Select * from discoveredapplications where ID = '" & CurrID & "';"

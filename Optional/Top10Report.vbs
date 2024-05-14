@@ -38,7 +38,7 @@ outputl = ""
 
 Set adoconn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
-adoconn.Open "Driver={MySQL ODBC 8.3 ANSI Driver};Server=" & DBLocation & ";" & _
+adoconn.Open "Driver={MySQL ODBC 8.4 ANSI Driver};Server=" & DBLocation & ";" & _
 			"Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 
 
