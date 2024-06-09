@@ -1,2 +1,4 @@
 #Ignore the ini file created when in production
 smapp.ini
+#Ignore any retired scripts
+Retired\
