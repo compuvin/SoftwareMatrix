@@ -2,6 +2,7 @@ Dim CurrID, CurrApp, CurrVer, CurrFree, CurrOS, CurrReason, CurrPC, CurrPlans, C
 Dim adoconn
 Dim rs
 Dim str
+Dim Response
 dim WPData 'Web page text
 dim xmlhttp : set xmlhttp = createobject("msxml2.serverxmlhttp.3.0")
 set filesys=CreateObject("Scripting.FileSystemObject")
@@ -24,7 +25,7 @@ CurrID = inputbox("Enter the reference ID of the application that you would like
 if len(CurrID) > 0 and isnumeric(CurrID) then
 	Set adoconn = CreateObject("ADODB.Connection")
 	Set rs = CreateObject("ADODB.Recordset")
-	adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+	adoconn.Open "Driver={MySQL ODBC 8.4 ANSI Driver};Server=" & DBLocation & ";" & _
 					   "Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 	
 	str = "Select * from discoveredapplications where ID = '" & CurrID & "';"
@@ -101,6 +102,29 @@ if len(CurrID) > 0 and isnumeric(CurrID) then
 		rs("UpdatePageQTHVarience") = CurrVar
 		rs.update
 		rs.close
+		
+		
+		'Check if app remames exist
+		str = "select count(*) from apprename where '" & CurrApp & "' REGEXP RegEx and Hits >= 5 and Confirmed = 5;" 'Greater than 5 hits to show ones that we've said no to
+		if cint((adoconn.Execute(str))(0)) > 0 then
+			str = "Select * from apprename where '" & CurrApp & "' REGEXP RegEx and Hits >= 5 and Confirmed = 5;"
+			rs.Open str, adoconn, 3, 3 'OpenType, LockType
+			
+			rs.movefirst
+			do while not rs.eof
+				if rs("Hits") = 5 then
+					Response = msgbox(CurrApp & " is being renamed to '" & rs("RenameTo") & "' based on this pattern: " & rs("RegEx") & vbCrlf & "Would you like to continue renaming it?", vbYesNo)
+				else
+					Response = msgbox(CurrApp & " is not allowed to be renamed to '" & rs("RenameTo") & "' based on this pattern: " & rs("RegEx") & vbCrlf & "Would you like to enable renaming it?", vbYesNo)
+				end if
+				if Response = vbYes then rs("Hits") = 5	else rs("Hits") = 6
+				
+				rs.movenext
+			loop
+	
+			rs.close
+			msgbox "No further app rename rules match."
+		end if
 	else
 		msgbox "ID entered was not found in the DB!"
 	end if

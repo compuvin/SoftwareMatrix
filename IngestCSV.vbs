@@ -14,6 +14,7 @@ Dim WshShell, strCurDir
 Set WshShell = CreateObject("WScript.Shell")
 strCurDir = filesys.GetParentFolderName(Wscript.ScriptFullName)
 Dim AppRenames()
+Dim RenameTo, RenameEx, RenamePrev 'AI App Renaming
 Dim Response 'For answers to prompts
 Dim PSSchema, PSTbl 'Define schema and table names
 PSSchema = "software_matrix"
@@ -90,7 +91,8 @@ If filesys.FileExists(CSVPath) then
 		
 		Set adoconn = CreateObject("ADODB.Connection")
 		Set rs = CreateObject("ADODB.Recordset")
-		adoconn.Open "Driver={MySQL ODBC 8.0 ANSI Driver};Server=" & DBLocation & ";" & _
+		'See if we can use this later: HKEY_LOCAL_MACHINE\SOFTWARE\ODBC\ODBCINST.INI\
+		adoconn.Open "Driver={MySQL ODBC 8.4 ANSI Driver};Server=" & DBLocation & ";" & _
 					   "Database=" & PSSchema & "; User=" & DBUser & "; Password=" & DBPass & ";"
 
 		Get_App_Renames 'Uses apprename table to check regex for apps that match patterns and should be listed as the same app
@@ -228,8 +230,10 @@ Function Get_PC_New_Updated()
 					str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "');"
 				end if
 				adoconn.Execute(str)
+				RenamePrev = rs("Name")
 			end if
 			rs.close
+			
 			
 			if yfound = false then
 				str = "Select * from discoveredapplications where Name like '" & left(CurrApp,len(CurrApp)/2) & "%' and not UpdateURL = '' and UpdateURL IS NOT NULL;"
@@ -253,6 +257,7 @@ Function Get_PC_New_Updated()
 						if UpdatePageQTHVarience = 10 + len(rs("Version_Newest")) then UpdatePageQTHVarience = 10 + len(CurrVer) 'Update the varience if it has never been updated and the version length is different
 						str = "INSERT INTO discoveredapplications(Name,Version_Oldest,Version_Newest,LastDiscovered,FirstDiscovered,Free,OpenSource,FOSS,ReasonForSoftware,NeededOnMachines,PlansForRemoval,`Update Method`,UpdateURL,UpdatePageQTH,UpdatePageQTHVarience) values('" & CurrApp & "','" & CurrVer & "','" & CurrVer & "','" & format(date(), "YYYY-MM-DD")  & "','" & format(date(), "YYYY-MM-DD") & "','" & rs("Free") & "','" & rs("OpenSource") & "','" & rs("FOSS") & "','" & rs("ReasonForSoftware") & "','" & rs("NeededOnMachines") & "','" & rs("PlansForRemoval") & "','" & rs("Update Method") & "','" & rs("UpdateURL") & "','" & instr(1,WPData,CurrVer,0) & "','" & UpdatePageQTHVarience & "');"
 						adoconn.Execute(str)
+						RenamePrev = rs("Name")
 					end if
 				end if
 				rs.close
@@ -296,6 +301,8 @@ Function Get_PC_New_Updated()
 				adoconn.Execute(str)
 				
 				'msgbox "Added: " & CurrApp & " - " & CurrVer
+			else 'Machine Learning App Renames
+				Add_App_Renames CurrApp, RenamePrev, CurrAppNoVer
 			end if
 		end if
 		
@@ -506,7 +513,12 @@ Function Get_Organization_New()
 End function
 
 Function Get_Organization_Removed()
+	Dim RenameConf()
 	str = "Select * from discoveredapplications where LastDiscovered IS NOT NULL and not LastDiscovered = '" & format(date(), "YYYY-MM-DD") & "' order by LastDiscovered DESC, Name;"
+	redim RenameConf(cint((adoconn.Execute(replace(str,"*","count(*)")))(0)) - 1)
+	i = 0
+	'msgbox UBound(RenameConf)
+	
 	rs.Open str, adoconn, 3, 3 'OpenType, LockType
 	if not rs.eof then
 		'Header Info
@@ -530,19 +542,51 @@ Function Get_Organization_Removed()
 		outputl = outputl & "  <td>" & rs("LastDiscovered") & "</td>" & vbcrlf
 		outputl = outputl & "</tr>" & vbcrlf
 	
-		if cdate(rs("LastDiscovered")) < (Date() - 7) then rs.delete
+		if cdate(rs("LastDiscovered")) < (Date() - 7) then
+			RenameConf(i) = rs("Name")
+			rs.delete
+		Else
+			RenameConf(i) = ""
+		end if
+		i = i + 1
 		rs.movenext
 		if rs.eof then outputl = outputl & "</table>" & vbcrlf
 	loop
 	
 	rs.close
+	
+	'Machine Learning App Renames - Confirm
+	if UBound(RenameConf) > 0 then
+		Set re = New RegExp
+		
+		str = "Select * from apprename where Confirmed < 5;"
+		rs.Open str, adoconn, 3, 3 'OpenType, LockType
+		
+		if not rs.eof then
+			rs.MoveFirst
+		end if
+
+		do while not rs.eof
+			re.Pattern = rs("RegEx")
+			for i = 0 to UBound(RenameConf)
+				If not RenameConf(i) = "" then
+					if re.Test(RenameConf(i)) then
+						'msgbox rs("RenameTo") & vbCrlf & RenameConf(i)
+						rs("Confirmed") = int(rs("Confirmed")) + 1
+						rs.update
+					end if
+				end if
+			next
+			rs.movenext
+	loop
+	end if
 End function
 
 Function Get_App_Renames()	
-	str = "select count(*) from apprename;"
+	str = "select count(*) from apprename where Hits = 5 and Confirmed = 5;"
 	redim AppRenames(cint((adoconn.Execute(str))(0)) - 1,1)
 	
-	str = "Select * from apprename;"
+	str = "Select * from apprename where Hits = 5 and Confirmed = 5;"
 	rs.Open str, adoconn, 2, 1 'OpenType, LockType
 		
 	i = 0
@@ -557,6 +601,83 @@ Function Get_App_Renames()
 	
 	rs.close
 End function
+
+Function Add_App_Renames(MLCurrApp, MLPrevApp, MLCurrAppNoVer) 'Machine Learning App Renames
+	Dim ThingsToKeep, MLfound
+	ThingsToKeep = Array("(x86)", "(x64)", "(64-bit)", "(32-bit)") 'These strings will remain in any app renames if they exist
+	MLfound = false
+	
+	'Change MLCurrAppNoVer so that it matches RegEx format
+	MLCurrAppNoVer = Replace(MLCurrAppNoVer,"%","*")
+	MLCurrAppNoVer = Replace(MLCurrAppNoVer,"_",".")
+	
+	Set re = New RegExp
+	for i = 1 to len(MLCurrApp)
+		if not left(MLCurrApp,i) = Left(MLPrevApp,i) then
+			i = i - 1 'Because the last character didn't match
+			If right(MLPrevApp,1) = " " then i = i - 1 'Remove space at the end if there is one
+			RenameTo = Left(MLPrevApp,i)
+			'msgbox left(MLPrevApp,i) + vbcrlf + MLCurrAppNoVer
+			RenameEx = Left(MLPrevApp,i)
+			if len(RenameEx) < len(MLCurrAppNoVer) then
+				RenameEx = RenameEx + mid(MLCurrAppNoVer,i+1,len(MLCurrAppNoVer)-i+1)
+			else
+				RenameEx = RenameEx + "*"
+			end if
+			i = len(MLCurrApp)
+		end if
+	next
+	
+	'Rule = Done leave a space in the second to last character or period in last character
+	if left(right(RenameTo,2),1) = " " then RenameTo = left(RenameTo,len(RenameTo)-2)
+	if right(RenameTo,1) = "." then RenameTo = left(RenameTo,len(RenameTo)-1)
+	
+	'Make sure we keep strings in ThingsToKeep
+	for i = 0 to ubound(ThingsToKeep)
+		if instr(1,MLCurrApp,ThingsToKeep(i)) then
+			if not instr(1,RenameTo,ThingsToKeep(i)) then RenameTo = RenameTo + " " + ThingsToKeep(i)
+			if len(RenameEx) > instr(1,MLCurrApp,ThingsToKeep(i)) + len(ThingsToKeep(i)) then
+				RenameEx = mid(RenameEx,1,instr(1,MLCurrApp,ThingsToKeep(i))-1) + ThingsToKeep(i) + right(RenameEx,len(RenameEx)-instr(1,MLCurrApp,ThingsToKeep(i))-len(ThingsToKeep(i)))
+			else
+				RenameEx = mid(RenameEx,1,instr(1,MLCurrApp,ThingsToKeep(i))-1) + ThingsToKeep(i)
+			end if
+			'msgbox "We kept " + ThingsToKeep(i)
+		end if
+	next
+	
+	RenameEx = Replace(RenameEx," *","*") 'Remove unnecessary space
+	RenameEx = Replace(Replace(RenameEx,"(","\\("),")","\\)") 'Excape ( and )
+	RenameEx = Replace(RenameEx,"+","\\+") 'Excape +
+	RenameTo = Replace(RenameTo,"  "," ") 'Remove unnecessary space in RenameTo
+	
+	'msgbox "Current App: " + MLCurrApp + vbcrlf + "Previous App: " + MLPrevApp + vbcrlf + vbcrlf + "Rename To: " + RenameTo + vbcrlf + "Pattern: " + RenameEx
+	
+	if not MLCurrApp = RenameTo then 'After all of the processing the current app name might be good enough
+		str = "Select * from apprename where RenameTo = '" & RenameTo & "';"
+		rs.Open str, adoconn, 3, 3 'OpenType, LockType
+		
+		if not rs.eof then rs.MoveFirst
+
+		do while not rs.eof
+			re.Pattern = rs("RegEx")
+			If re.Test(MLCurrApp) then
+				if int(rs("Hits")) < 5 then 
+					rs("Hits") = int(rs("Hits")) + 1
+					rs.update
+				end if
+				MLfound = True
+				rs.movenext
+			end if
+		loop
+		
+		if MLfound = false then
+			str = "INSERT INTO apprename(RegEx,RenameTo,Hits,Confirmed) values('" & RenameEx & "','" & RenameTo & "','1','0');"
+			adoconn.Execute(str)
+		end if
+		
+		rs.close
+	end if
+End Function
 
 Function PadVersion(InputVersion)
 	Dim PaddedVersion
@@ -1032,7 +1153,7 @@ Function CheckForTables()
 		adoconn.Execute(str)
 		
 		PSTbl = "apprename"
-		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, RegEx text, RenameTo text);"
+		str = "CREATE TABLE " & PSSchema & "." & PSTbl & " (ID INT PRIMARY KEY AUTO_INCREMENT, RegEx text, RenameTo text, Hits INT NOT NULL DEFAULT '0', Confirmed INT NOT NULL DEFAULT '0');"
 		adoconn.Execute(str)
 	end if
 	
