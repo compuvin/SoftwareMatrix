@@ -38,8 +38,8 @@ outputl = ""
 
 Set adoconn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
-adoconn.Open "Driver={MySQL ODBC 8.4 ANSI Driver};Server=" & DBLocation & ";" & _
-			"Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
+adoconn.Open "Driver={" & GetMySQLDriver & "};Server=" & DBLocation & ";" & _
+	"Database=software_matrix; User=" & DBUser & "; Password=" & DBPass & ";"
 
 
 TopTenUpdate 'Report on top 10 most needed updates by device and app
@@ -310,3 +310,20 @@ Function ReadIni( myFilePath, mySection, myKey ) 'Thanks to http://www.robvander
         Wscript.Quit 1
     End If
 End Function
+
+'Get installed MySQL driver name from HKEY_LOCAL_MACHINE\SOFTWARE\ODBC\ODBCINST.INI\
+function GetMySQLDriver()
+	Const HKEY_LOCAL_MACHINE = &H80000002
+
+	strComputer = "."
+	 
+	Set oReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & _ 
+		strComputer & "\root\default:StdRegProv")
+	 
+	strKeyPath = "SOFTWARE\ODBC\ODBCINST.INI"
+	oReg.EnumKey HKEY_LOCAL_MACHINE, strKeyPath, arrSubKeys
+	 
+	For Each subkey In arrSubKeys
+		if instr(1,subkey,"MySQL ODBC",1) >0 and instr(1,subkey,"ANSI Driver",1) then GetMySQLDriver = subkey
+	Next
+end function

@@ -91,8 +91,7 @@ If filesys.FileExists(CSVPath) then
 		
 		Set adoconn = CreateObject("ADODB.Connection")
 		Set rs = CreateObject("ADODB.Recordset")
-		'See if we can use this later: HKEY_LOCAL_MACHINE\SOFTWARE\ODBC\ODBCINST.INI\
-		adoconn.Open "Driver={MySQL ODBC 8.4 ANSI Driver};Server=" & DBLocation & ";" & _
+		adoconn.Open "Driver={" & GetMySQLDriver & "};Server=" & DBLocation & ";" & _
 					   "Database=" & PSSchema & "; User=" & DBUser & "; Password=" & DBPass & ";"
 
 		Get_App_Renames 'Uses apprename table to check regex for apps that match patterns and should be listed as the same app
@@ -1160,3 +1159,20 @@ Function CheckForTables()
 	Set adoconn = Nothing
 	Set rs = Nothing
 End Function
+
+'Get installed MySQL driver name from HKEY_LOCAL_MACHINE\SOFTWARE\ODBC\ODBCINST.INI\
+function GetMySQLDriver()
+	Const HKEY_LOCAL_MACHINE = &H80000002
+
+	strComputer = "."
+	 
+	Set oReg=GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & _ 
+		strComputer & "\root\default:StdRegProv")
+	 
+	strKeyPath = "SOFTWARE\ODBC\ODBCINST.INI"
+	oReg.EnumKey HKEY_LOCAL_MACHINE, strKeyPath, arrSubKeys
+	 
+	For Each subkey In arrSubKeys
+		if instr(1,subkey,"MySQL ODBC",1) >0 and instr(1,subkey,"ANSI Driver",1) then GetMySQLDriver = subkey
+	Next
+end function
