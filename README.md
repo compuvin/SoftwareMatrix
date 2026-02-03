@@ -68,6 +68,10 @@ Optional/Get-InstalledApps.ps1:
 Optional software crawler for small deployments. Run locally (or via scheduled task) on each workstation to collect installed applications and write them to the `smcrawler` table in MySQL.
 Requires the MySQL .NET connector and access to `smapp.ini` for database credentials. The script will attempt to locate `smapp.ini` in the parent folder if it is run from the `Optional` directory.
 Use this when you do not have a separate inventory source (e.g., PDQ) to generate the CSV for `IngestCSV.vbs`.
+Quick start:
+1. Ensure the MySQL .NET connector is installed on the workstation.
+2. Copy `smapp.ini` from the main install directory (or create it) and confirm the `[Database]` settings.
+3. Run `Optional/Get-InstalledApps.ps1` locally or schedule it to run daily on each workstation.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -91,7 +95,7 @@ Updating is simple using git:
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Create a software crawler or agent for small deployments
+- [x] Create a software crawler or agent for small deployments (see `Optional/Get-InstalledApps.ps1`)
 - [ ] Better code documentation
 - [ ] Create and Integrate WhatTheFOSS list
 
