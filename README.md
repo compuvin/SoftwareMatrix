@@ -64,6 +64,11 @@ Run as needed.
 Allows the admin user to quickly answer questions about newly found applications (from the Security Report) to get all of the columns filled in for the application.
 This has been replaced with the web GUI but can still be used.
 
+Optional/Get-InstalledApps.ps1:
+Optional software crawler for small deployments. Run locally (or via scheduled task) on each workstation to collect installed applications and write them to the `smcrawler` table in MySQL.
+Requires the MySQL .NET connector and access to `smapp.ini` for database credentials. The script will attempt to locate `smapp.ini` in the parent folder if it is run from the `Optional` directory.
+Use this when you do not have a separate inventory source (e.g., PDQ) to generate the CSV for `IngestCSV.vbs`.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Updating
